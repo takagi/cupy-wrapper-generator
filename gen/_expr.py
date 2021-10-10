@@ -7,6 +7,8 @@ def gen_expr(node):
         value = _pycparser.constant_value(node)
         assert type_ in ['int', 'unsigned int']
         return value
+    elif _pycparser.is_id_node(node):
+        return _pycparser.id_name(node)
     elif _pycparser.is_unary_op_node(node):
         op = _pycparser.unary_op_op(node)
         expr = gen_expr(_pycparser.unary_op_expr(node))

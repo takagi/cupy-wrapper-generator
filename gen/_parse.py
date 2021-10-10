@@ -18,7 +18,7 @@ def parse_headers(config):
             temp_c_path = os.path.join(temp_dir, 'temp.c')
             with open(temp_c_path, 'w') as f:
                 for filename in filenames:
-                    f.write(f'#include "{filename}"\n')
+                    f.write(f'#include <{filename}>\n')
             ast = pycparser.parse_file(temp_c_path, use_cpp=True, cpp_args=[
                 f'-I{include_path}',
                 f'-I{package_path}include/',  # for fake libc headers

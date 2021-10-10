@@ -141,6 +141,15 @@ def constant_value(node):
     return node.value
 
 
+def is_id_node(node):
+    return isinstance(node, c_ast.ID)
+
+
+def id_name(node):
+    assert is_id_node(node)
+    return node.name
+
+
 def is_unary_op_node(node):
     return isinstance(node, c_ast.UnaryOp)
 

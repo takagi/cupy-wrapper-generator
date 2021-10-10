@@ -1,11 +1,11 @@
 import re
-import warnings
 
 from gen import _environment
 from gen import _pycparser
 
 
 def _collect_func_decls(headers, config):
+    pattern = re.compile(config['patterns']['function'])
     decls = {}
     skip_list = []
     for version, nodes in headers:
@@ -14,12 +14,14 @@ def _collect_func_decls(headers, config):
                 continue
 
             name = _pycparser.function_name(node)
+            if pattern.fullmatch(name) is None:
+                continue
             if name not in config['functions']:
                 if name not in skip_list:
                     skip_list.append(name)
                     msg = (f"'{name}' does not appear in the configuration. "
                            'Skip.')
-                    warnings.warn(msg)
+                    print(msg)
                 continue
 
             func_config = config['functions'][name]
@@ -40,7 +42,7 @@ def _collect_func_decls(headers, config):
         if name not in decls:
             msg = (f"'{name}' appears in the configuration, but does not in "
                    'the header files.')
-            warnings.warn(msg)
+            print(msg)
 
     versions = [version for version, _ in headers]
     for old, new in zip(versions[:-1], versions[1:]):
@@ -56,7 +58,6 @@ def _collect_func_decls(headers, config):
 
 def _collect_enum_decls(headers, config):
     pattern = re.compile(config['patterns']['type'])
-
     decls = {}
     for version, nodes in headers:
         for node in nodes:
@@ -86,7 +87,6 @@ def _collect_enum_decls(headers, config):
 
 def _collect_opaque_type_decls(headers, config):
     pattern = re.compile(config['patterns']['type'])
-
     decls = {}
     for version, nodes in headers:
         for node in nodes:
