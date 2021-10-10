@@ -25,7 +25,7 @@ def _collect_func_decls(headers, config):
                 continue
 
             func_config = config['functions'][name]
-            if func_config == 'pass':
+            if func_config == 'skip':
                 if name not in skip_list:
                     skip_list.append(name)
                     print(f"Skip '{name}'")
@@ -37,7 +37,7 @@ def _collect_func_decls(headers, config):
             decls[name]['versions'].append(version)
 
     for name in config['functions']:
-        if config['functions'][name] == 'pass':
+        if config['functions'][name] == 'skip':
             continue
         if name not in decls:
             msg = (f"'{name}' appears in the configuration, but does not in "

@@ -65,11 +65,11 @@
         'cublasSetMathMode': {
             'return': None,
         },
-        'cublasGetSmCountTarget': 'pass',
-        'cublasSetSmCountTarget': 'pass',
-        'cublasLoggerConfigure': 'pass',
-        'cublasSetLoggerCallback': 'pass',
-        'cublasGetLoggerCallback': 'pass',
+        'cublasGetSmCountTarget': 'skip',
+        'cublasSetSmCountTarget': 'skip',
+        'cublasLoggerConfigure': 'skip',
+        'cublasSetLoggerCallback': 'skip',
+        'cublasGetLoggerCallback': 'skip',
         'cublasSetVector': {
             'return': None,
         },
@@ -98,7 +98,7 @@
             'return': None,
             'stream': 'pass',
         },
-        'cublasXerbla': 'pass',  # an error handler
+        'cublasXerbla': 'skip',  # an error handler
 
         # cuBLAS Level-1 Function and BLAS-like Extension
 
@@ -700,7 +700,7 @@
             'return': None,
             'stream': 'set',
         },
-        'cublasGemmEx': 'pass',  # by hand for compatibility
+        'cublasGemmEx': 'skip',  # by hand for compatibility
         'cublasCgemmEx': {
             'return': None,
             'stream': 'set',
