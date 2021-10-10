@@ -1,5 +1,4 @@
 import math
-import re
 
 
 def indent(string):
@@ -11,16 +10,6 @@ def partition(pred, seq):
     for item in seq:
         (a if pred(item) else b).append(item)
     return a, b
-
-
-# FIXME: move
-def deref_var_name(name):
-    m = re.fullmatch(r'p([A-Z].*)', name)
-    if m is not None:
-        name1 = m[1]
-        return name1[0].lower() + name1[1:]
-    else:
-        return name
 
 
 def _cuda_version(version):

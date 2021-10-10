@@ -1,3 +1,5 @@
+import re
+
 from gen import _enum_decl
 from gen import _environment
 from gen import _expr
@@ -106,6 +108,15 @@ def _generate_stream_code(code, fashion, setter_name, arg_nodes):
         assert False
 
 
+def _deref_var_name(name):
+    m = re.fullmatch(r'p([A-Z].*)', name)
+    if m is not None:
+        name1 = m[1]
+        return name1[0].lower() + name1[1:]
+    else:
+        return name
+
+
 def generate_wrapper_definition(name, env):
     def argaux0(arg_node, env):
         arg_name = _pycparser.argument_name(arg_node)
@@ -122,7 +133,7 @@ def generate_wrapper_definition(name, env):
     def argaux1(arg_node, out_node, env):
         if arg_node is out_node:
             arg_name = _pycparser.argument_name(arg_node)
-            ret_name = gen.util.deref_var_name(arg_name)
+            ret_name = _deref_var_name(arg_name)
             return f'&{ret_name}'
         return argaux0(arg_node, env)
 
@@ -161,7 +172,7 @@ def generate_wrapper_definition(name, env):
         assert len(out_nodes) == 1, f'`{out_name}` not found in API arguments'
         out_node = out_nodes[0]
         out_type_node = _pycparser.argument_type_node(out_node)
-        ret_name = gen.util.deref_var_name(out_name)
+        ret_name = _deref_var_name(out_name)
         ret_type_node = _pycparser.deref(out_type_node)
         ret_cupy_type, is_array = _type_decl.cupy_type(ret_type_node, env)
         assert not is_array
