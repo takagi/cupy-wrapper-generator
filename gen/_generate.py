@@ -248,10 +248,10 @@ def generate_function_stub(name, env):
 def generate_opaque_type_stub(name, env):
     opaque_node = _environment.environment_opaque_type_node(name, env)
     cuda_type = _opaque_decl.cuda_type(opaque_node)
-    return f'typedef void* {cuda_type}'
+    return f'typedef void* {cuda_type};'
 
 
 def generate_enum_stub(name, env):
     enum_node = _environment.environment_enum_node(name, env)
     cuda_type = _enum_decl.cuda_type(enum_node)
-    return f'typedef enum{{}} {cuda_type}'
+    return f'typedef enum{{}} {cuda_type};'

@@ -14,6 +14,14 @@ extern "C" {{
 
 {func_stubs}
 
+cublasStatus_t cublasGemmEx(...) {{
+    return CUBLAS_STATUS_SUCCESS;
+}}
+
+cublasStatus_t cublasGemmEx_v11(...) {{
+    return CUBLAS_STATUS_SUCCESS;
+}}
+
 }} // extern "C"
 
 #endif // #ifndef INCLUDE_GUARD_STUB_CUPY_CUBLAS_H
