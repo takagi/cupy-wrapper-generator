@@ -8,7 +8,11 @@
 
 extern "C" {{
 
-{stubs}
+{opaque_stubs}
+
+{enum_stubs}
+
+{func_stubs}
 
 }} // extern "C"
 

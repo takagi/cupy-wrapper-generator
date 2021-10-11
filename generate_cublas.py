@@ -91,10 +91,10 @@ def _emit_compat_header(env, root_path, assets_path):
 
         if enum_added or opaque_added or func_added:
             compat.append(gen.util.compat_section_header(new, 'added'))
-        for name in enum_added:
-            compat.append(gen.generate_enum_stub(name, env))
         for name in opaque_added:
             compat.append(gen.generate_opaque_type_stub(name, env))
+        for name in enum_added:
+            compat.append(gen.generate_enum_stub(name, env))
         for name in func_added:
             compat.append(gen.generate_function_stub(name, env))
         if enum_added or opaque_added or func_added:
@@ -102,10 +102,10 @@ def _emit_compat_header(env, root_path, assets_path):
 
         if enum_removed or opaque_removed or func_removed:
             compat.append(gen.util.compat_section_header(new, 'removed'))
-        for name in enum_removed:
-            compat.append(gen.generate_enum_stub(name, env))
         for name in opaque_removed:
             compat.append(gen.generate_opaque_type_stub(name, env))
+        for name in enum_removed:
+            compat.append(gen.generate_enum_stub(name, env))
         for name in func_removed:
             compat.append(gen.generate_function_stub(name, env))
         if enum_removed or opaque_removed or func_removed:
@@ -128,11 +128,23 @@ def _emit_compat_header(env, root_path, assets_path):
 def _emit_stub_header(env, root_path, assets_path):
     print('Generating stub/cupy_cublas.h...')
 
+    # Generate opaque type stubs
+    opaque_stubs = []
+    for name in gen.environment_opaque_types(env):
+        opaque_stubs.append(gen.generate_opaque_type_stub(name, env))
+    opaque_stubs = '\n'.join(opaque_stubs)
+
+    # Generate enum stubs
+    enum_stubs = []
+    for name in gen.environment_enums(env):
+        enum_stubs.append(gen.generate_enum_stub(name, env))
+    enum_stubs = '\n'.join(enum_stubs)
+
     # Generate function stubs
-    stubs = []
+    func_stubs = []
     for name in gen.environment_functions(env):
-        stubs.append(gen.generate_function_stub(name, env))
-    stubs = '\n\n'.join(stubs)
+        func_stubs.append(gen.generate_function_stub(name, env))
+    func_stubs = '\n\n'.join(func_stubs)
 
     # Read the template file
     template_path = os.path.join(assets_path, 'stub', 'cupy_cublas.h')
@@ -143,7 +155,9 @@ def _emit_stub_header(env, root_path, assets_path):
     os.makedirs(out_path, exist_ok=True)
     out_path = os.path.join(out_path, 'cupy_cublas.h')
     with open(out_path, 'w') as f:
-        code = template.format(stubs=stubs)
+        code = template.format(opaque_stubs=opaque_stubs,
+                               enum_stubs=enum_stubs,
+                               func_stubs=func_stubs)
         f.write(code)
 
 
