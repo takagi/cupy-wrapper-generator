@@ -259,7 +259,7 @@ def generate_enum_stub(name, env):
         success_name, success_expr = _pycparser.status_enum_success(enum_node)
         success_expr = _expr.gen_expr(success_expr)
         return f'''typedef enum {{
-    {success_name} = {success_expr};
+    {success_name} = {success_expr}
 }} {status_type};'''
     else:
         cuda_type = _enum_decl.cuda_type(enum_node)
