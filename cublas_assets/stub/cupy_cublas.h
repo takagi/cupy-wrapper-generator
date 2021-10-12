@@ -30,7 +30,7 @@ cublasStatus_t cublasGemmBatchedEx_v11(...) {{
     return CUBLAS_STATUS_SUCCESS;
 }}
 
-cublasStatus_t cublasGemmStridecBatchedEx(...) {{
+cublasStatus_t cublasGemmStridedBatchedEx(...) {{
     return CUBLAS_STATUS_SUCCESS;
 }}
 
