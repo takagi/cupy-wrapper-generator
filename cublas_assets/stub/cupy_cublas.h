@@ -22,6 +22,22 @@ cublasStatus_t cublasGemmEx_v11(...) {{
     return CUBLAS_STATUS_SUCCESS;
 }}
 
+cublasStatus_t cublasGemmBatchedEx(...) {{
+    return CUBLAS_STATUS_SUCCESS;
+}}
+
+cublasStatus_t cublasGemmBatchedEx_v11(...) {{
+    return CUBLAS_STATUS_SUCCESS;
+}}
+
+cublasStatus_t cublasGemmStridecBatchedEx(...) {{
+    return CUBLAS_STATUS_SUCCESS;
+}}
+
+cublasStatus_t cublasGemmStridedBatchedEx_v11(...) {{
+    return CUBLAS_STATUS_SUCCESS;
+}}
+
 }} // extern "C"
 
 #endif // #ifndef INCLUDE_GUARD_STUB_CUPY_CUBLAS_H

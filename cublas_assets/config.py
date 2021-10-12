@@ -873,14 +873,8 @@
             'return': None,
             'stream': 'set',
         },
-        'cublasGemmBatchedEx': {
-            'return': None,
-            'stream': 'set',
-        },
-        'cublasGemmStridedBatchedEx': {
-            'return': None,
-            'stream': 'set',
-        },
+        'cublasGemmBatchedEx': 'skip',  # by hand for compatibility
+        'cublasGemmStridedBatchedEx': 'skip',  # by hand for compatibility
         'cublasSgemmStridedBatched': {
             'return': None,
             'stream': 'set',
