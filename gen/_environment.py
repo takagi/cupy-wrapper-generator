@@ -165,25 +165,12 @@ def environment_enums_diff(env, old_version, new_version):
     return added, removed
 
 
-def _environment_enum_status_node(env):
+def environment_status_enum_node(env):
     for name in environment_enums(env):
-        if 'Status_t' in name:
-            return environment_enum_node(name, env)
-    else:
-        raise ValueError('Status type not found')
-
-
-def environment_enum_status_type(env):
-    node = _environment_enum_status_node(env)
-    return _pycparser.enum_name(node)
-
-
-def environment_enum_status_success(env):
-    node = _environment_enum_status_node(env)
-    for name, _ in _pycparser.enum_items(node):
-        if 'STATUS_SUCCESS' in name:
-            return name
-    raise ValueError('Success status not found')
+        enum_node = environment_enum_node(name, env)
+        if _pycparser.is_status_enum_decl_node(enum_node):
+            return enum_node
+    raise ValueError('Status enum not found')
 
 
 # Opaque types

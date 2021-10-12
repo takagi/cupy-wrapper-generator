@@ -93,6 +93,20 @@ def type_base_type(node):
 deref = type_base_type
 
 
+# Opaque type declarations
+
+def is_opaque_type_decl_node(node):
+    return (isinstance(node, c_ast.Typedef) and
+            isinstance(node.type, c_ast.PtrDecl) and
+            isinstance(node.type.type, c_ast.TypeDecl) and
+            isinstance(node.type.type.type, c_ast.Struct))
+
+
+def opaque_type_name(node):
+    assert is_opaque_type_decl_node(node)
+    return node.name
+
+
 # Enum declarations
 
 def is_enum_decl_node(node):
@@ -111,18 +125,18 @@ def enum_items(node):
     return [(e.name, e.value) for e in node.type.type.values.enumerators]
 
 
-# Opaque type declarations
-
-def is_opaque_type_decl_node(node):
-    return (isinstance(node, c_ast.Typedef) and
-            isinstance(node.type, c_ast.PtrDecl) and
-            isinstance(node.type.type, c_ast.TypeDecl) and
-            isinstance(node.type.type.type, c_ast.Struct))
+def is_status_enum_decl_node(node):
+    if not is_enum_decl_node(node):
+        return False
+    return 'Status_t' in enum_name(node)
 
 
-def opaque_type_name(node):
-    assert is_opaque_type_decl_node(node)
-    return node.name
+def status_enum_success(node):
+    assert is_status_enum_decl_node(node)
+    for e in node.type.type.values.enumerators:
+        if 'STATUS_SUCCESS' in e.name:
+            return e.name, e.value
+    raise ValueError('Success status not found')
 
 
 # Expressions

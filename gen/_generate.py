@@ -231,10 +231,11 @@ def generate_function_stub(name, env):
     ret_type, is_array = _type_decl.cuda_type(ret_type_node)
     assert not is_array
 
-    status_type = _environment.environment_enum_status_type(env)
+    status_enum_node = _environment.environment_status_enum_node(env)
+    status_enum_type = _pycparser.enum_name(status_enum_node)
 
-    if ret_type == status_type:
-        ret_value = _environment.environment_enum_status_success(env)
+    if ret_type == status_enum_type:
+        ret_value, _ = _pycparser.status_enum_success(status_enum_node)
     elif ret_type == 'size_t':
         ret_value = 0
     else:
@@ -253,5 +254,13 @@ def generate_opaque_type_stub(name, env):
 
 def generate_enum_stub(name, env):
     enum_node = _environment.environment_enum_node(name, env)
-    cuda_type = _enum_decl.cuda_type(enum_node)
-    return f'typedef enum{{}} {cuda_type};'
+    if _pycparser.is_status_enum_decl_node(enum_node):
+        status_type = _pycparser.enum_name(enum_node)
+        success_name, success_expr = _pycparser.status_enum_success(enum_node)
+        success_expr = _expr.gen_expr(success_expr)
+        return f'''typedef enum {{
+    {success_name} = {success_expr};
+}} {status_type};'''
+    else:
+        cuda_type = _enum_decl.cuda_type(enum_node)
+        return f'typedef enum{{}} {cuda_type};'
