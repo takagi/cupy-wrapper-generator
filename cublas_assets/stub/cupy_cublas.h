@@ -18,15 +18,7 @@ cublasStatus_t cublasGemmEx(...) {{
     return CUBLAS_STATUS_SUCCESS;
 }}
 
-cublasStatus_t cublasGemmEx_v11(...) {{
-    return CUBLAS_STATUS_SUCCESS;
-}}
-
 cublasStatus_t cublasGemmBatchedEx(...) {{
-    return CUBLAS_STATUS_SUCCESS;
-}}
-
-cublasStatus_t cublasGemmBatchedEx_v11(...) {{
     return CUBLAS_STATUS_SUCCESS;
 }}
 
@@ -34,9 +26,9 @@ cublasStatus_t cublasGemmStridedBatchedEx(...) {{
     return CUBLAS_STATUS_SUCCESS;
 }}
 
-cublasStatus_t cublasGemmStridedBatchedEx_v11(...) {{
-    return CUBLAS_STATUS_SUCCESS;
-}}
+#define cublasGemmEx_v11 cublasGemmEx
+#define cublasGemmBatchedEx_v11 cublasGemmBatchedEx
+#define cublasGemmStridedBatchedEx_v11 cublasGemmStridedBatchedEx
 
 }} // extern "C"
 
