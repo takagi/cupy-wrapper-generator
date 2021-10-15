@@ -4,11 +4,11 @@ from gen import _pycparser
 
 _special_types = {
     'cudaDataType': {
-        'cupy_type': 'runtime.DataType',
+        'cupy_type': 'DataType',
         'erased_type': 'size_t',
     },
     'cudaDataType_t': {
-        'cupy_type': 'runtime.DataType',
+        'cupy_type': 'DataType',
         'erased_type': 'size_t',
     },
     'libraryPropertyType': {
@@ -16,7 +16,7 @@ _special_types = {
         'erased_type': 'int',
     },
     'cudaStream_t': {
-        'cupy_type': 'driver.Stream',
+        'cupy_type': 'Stream',
         'erased_type': 'size_t',
     },
 }

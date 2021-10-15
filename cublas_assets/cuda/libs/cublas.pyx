@@ -4,7 +4,6 @@
 
 cimport cython  # NOQA
 
-from cupy_backends.cuda.api cimport driver
 from cupy_backends.cuda.api cimport runtime
 from cupy_backends.cuda cimport stream as stream_module
 
@@ -18,8 +17,9 @@ cdef extern from '../../cupy_complex.h':
     ctypedef struct cuDoubleComplex 'cuDoubleComplex'
 
 
-# FIXME: move to runtime
 cdef extern from *:
+    ctypedef void* Stream 'cudaStream_t'
+    ctypedef int DataType 'cudaDataType'
     ctypedef int LibraryPropertyType 'libraryPropertyType_t'
 
 
@@ -27,12 +27,12 @@ cdef extern from '../../cupy_blas.h' nogil:
 {external_decls}
 
     # Define by hand for backward compatibility
-    Status cublasGemmEx(Handle handle, Operation transa, Operation transb, int m, int n, int k, const void* alpha, const void* A, runtime.DataType Atype, int lda, const void* B, runtime.DataType Btype, int ldb, const void* beta, void* C, runtime.DataType Ctype, int ldc, runtime.DataType computeType, GemmAlgo algo)
-    Status cublasGemmEx_v11(Handle handle, Operation transa, Operation transb, int m, int n, int k, const void* alpha, const void* A, runtime.DataType Atype, int lda, const void* B, runtime.DataType Btype, int ldb, const void* beta, void* C, runtime.DataType Ctype, int ldc, ComputeType computeType, GemmAlgo algo)
-    Status cublasGemmBatchedEx(Handle handle, Operation transa, Operation transb, int m, int n, int k, const void* alpha, const void* const Aarray[], runtime.DataType Atype, int lda, const void* const Barray[], runtime.DataType Btype, int ldb, const void* beta, void* const Carray[], runtime.DataType Ctype, int ldc, int batchCount, runtime.DataType computeType, GemmAlgo algo)
-    Status cublasGemmBatchedEx_v11(Handle handle, Operation transa, Operation transb, int m, int n, int k, const void* alpha, const void* const Aarray[], runtime.DataType Atype, int lda, const void* const Barray[], runtime.DataType Btype, int ldb, const void* beta, void* const Carray[], runtime.DataType Ctype, int ldc, int batchCount, ComputeType computeType, GemmAlgo algo)
-    Status cublasGemmStridedBatchedEx(Handle handle, Operation transa, Operation transb, int m, int n, int k, const void* alpha, const void* A, runtime.DataType Atype, int lda, long long int strideA, const void* B, runtime.DataType Btype, int ldb, long long int strideB, const void* beta, void* C, runtime.DataType Ctype, int ldc, long long int strideC, int batchCount, runtime.DataType computeType, GemmAlgo algo)
-    Status cublasGemmStridedBatchedEx_v11(Handle handle, Operation transa, Operation transb, int m, int n, int k, const void* alpha, const void* A, runtime.DataType Atype, int lda, long long int strideA, const void* B, runtime.DataType Btype, int ldb, long long int strideB, const void* beta, void* C, runtime.DataType Ctype, int ldc, long long int strideC, int batchCount, ComputeType computeType, GemmAlgo algo)
+    Status cublasGemmEx(Handle handle, Operation transa, Operation transb, int m, int n, int k, const void* alpha, const void* A, DataType Atype, int lda, const void* B, DataType Btype, int ldb, const void* beta, void* C, DataType Ctype, int ldc, DataType computeType, GemmAlgo algo)
+    Status cublasGemmEx_v11(Handle handle, Operation transa, Operation transb, int m, int n, int k, const void* alpha, const void* A, DataType Atype, int lda, const void* B, DataType Btype, int ldb, const void* beta, void* C, DataType Ctype, int ldc, ComputeType computeType, GemmAlgo algo)
+    Status cublasGemmBatchedEx(Handle handle, Operation transa, Operation transb, int m, int n, int k, const void* alpha, const void* const Aarray[], DataType Atype, int lda, const void* const Barray[], DataType Btype, int ldb, const void* beta, void* const Carray[], DataType Ctype, int ldc, int batchCount, DataType computeType, GemmAlgo algo)
+    Status cublasGemmBatchedEx_v11(Handle handle, Operation transa, Operation transb, int m, int n, int k, const void* alpha, const void* const Aarray[], DataType Atype, int lda, const void* const Barray[], DataType Btype, int ldb, const void* beta, void* const Carray[], DataType Ctype, int ldc, int batchCount, ComputeType computeType, GemmAlgo algo)
+    Status cublasGemmStridedBatchedEx(Handle handle, Operation transa, Operation transb, int m, int n, int k, const void* alpha, const void* A, DataType Atype, int lda, long long int strideA, const void* B, DataType Btype, int ldb, long long int strideB, const void* beta, void* C, DataType Ctype, int ldc, long long int strideC, int batchCount, DataType computeType, GemmAlgo algo)
+    Status cublasGemmStridedBatchedEx_v11(Handle handle, Operation transa, Operation transb, int m, int n, int k, const void* alpha, const void* A, DataType Atype, int lda, long long int strideA, const void* B, DataType Btype, int ldb, long long int strideB, const void* beta, void* C, DataType Ctype, int ldc, long long int strideC, int batchCount, ComputeType computeType, GemmAlgo algo)
 
 
 ###############################################################################
@@ -100,9 +100,9 @@ cpdef gemmEx(intptr_t handle, int transa, int transb, int m, int n, int k, intpt
     setStream(handle, stream_module.get_current_stream_ptr())
     with nogil:
         if computeType >= CUBLAS_COMPUTE_16F:
-            status = cublasGemmEx_v11(<Handle>handle, <Operation>transa, <Operation>transb, m, n, k, <const void*>alpha, <const void*>A, <runtime.DataType>Atype, lda, <const void*>B, <runtime.DataType>Btype, ldb, <const void*>beta, <void*>C, <runtime.DataType>Ctype, ldc, <ComputeType>computeType, <GemmAlgo>algo)
+            status = cublasGemmEx_v11(<Handle>handle, <Operation>transa, <Operation>transb, m, n, k, <const void*>alpha, <const void*>A, <DataType>Atype, lda, <const void*>B, <DataType>Btype, ldb, <const void*>beta, <void*>C, <DataType>Ctype, ldc, <ComputeType>computeType, <GemmAlgo>algo)
         else:
-            status = cublasGemmEx(<Handle>handle, <Operation>transa, <Operation>transb, m, n, k, <const void*>alpha, <const void*>A, <runtime.DataType>Atype, lda, <const void*>B, <runtime.DataType>Btype, ldb, <const void*>beta, <void*>C, <runtime.DataType>Ctype, ldc, <runtime.DataType>computeType, <GemmAlgo>algo)
+            status = cublasGemmEx(<Handle>handle, <Operation>transa, <Operation>transb, m, n, k, <const void*>alpha, <const void*>A, <DataType>Atype, lda, <const void*>B, <DataType>Btype, ldb, <const void*>beta, <void*>C, <DataType>Ctype, ldc, <DataType>computeType, <GemmAlgo>algo)
     check_status(status)
 
 
@@ -111,9 +111,9 @@ cpdef gemmBatchedEx(intptr_t handle, int transa, int transb, int m, int n, int k
     setStream(handle, stream_module.get_current_stream_ptr())
     with nogil:
         if computeType >= CUBLAS_COMPUTE_16F:
-            status = cublasGemmBatchedEx_v11(<Handle>handle, <Operation>transa, <Operation>transb, m, n, k, <const void*>alpha, <const void* const*>Aarray, <runtime.DataType>Atype, lda, <const void* const*>Barray, <runtime.DataType>Btype, ldb, <const void*>beta, <void* const*>Carray, <runtime.DataType>Ctype, ldc, batchCount, <ComputeType>computeType, <GemmAlgo>algo)
+            status = cublasGemmBatchedEx_v11(<Handle>handle, <Operation>transa, <Operation>transb, m, n, k, <const void*>alpha, <const void* const*>Aarray, <DataType>Atype, lda, <const void* const*>Barray, <DataType>Btype, ldb, <const void*>beta, <void* const*>Carray, <DataType>Ctype, ldc, batchCount, <ComputeType>computeType, <GemmAlgo>algo)
         else:
-            status = cublasGemmBatchedEx(<Handle>handle, <Operation>transa, <Operation>transb, m, n, k, <const void*>alpha, <const void* const*>Aarray, <runtime.DataType>Atype, lda, <const void* const*>Barray, <runtime.DataType>Btype, ldb, <const void*>beta, <void* const*>Carray, <runtime.DataType>Ctype, ldc, batchCount, <runtime.DataType>computeType, <GemmAlgo>algo)
+            status = cublasGemmBatchedEx(<Handle>handle, <Operation>transa, <Operation>transb, m, n, k, <const void*>alpha, <const void* const*>Aarray, <DataType>Atype, lda, <const void* const*>Barray, <DataType>Btype, ldb, <const void*>beta, <void* const*>Carray, <DataType>Ctype, ldc, batchCount, <DataType>computeType, <GemmAlgo>algo)
     check_status(status)
 
 
@@ -122,7 +122,7 @@ cpdef gemmStridedBatchedEx(intptr_t handle, int transa, int transb, int m, int n
     setStream(handle, stream_module.get_current_stream_ptr())
     with nogil:
         if computeType >= CUBLAS_COMPUTE_16F:
-            status = cublasGemmStridedBatchedEx_v11(<Handle>handle, <Operation>transa, <Operation>transb, m, n, k, <const void*>alpha, <const void*>A, <runtime.DataType>Atype, lda, strideA, <const void*>B, <runtime.DataType>Btype, ldb, strideB, <const void*>beta, <void*>C, <runtime.DataType>Ctype, ldc, strideC, batchCount, <ComputeType>computeType, <GemmAlgo>algo)
+            status = cublasGemmStridedBatchedEx_v11(<Handle>handle, <Operation>transa, <Operation>transb, m, n, k, <const void*>alpha, <const void*>A, <DataType>Atype, lda, strideA, <const void*>B, <DataType>Btype, ldb, strideB, <const void*>beta, <void*>C, <DataType>Ctype, ldc, strideC, batchCount, <ComputeType>computeType, <GemmAlgo>algo)
         else:
-            status = cublasGemmStridedBatchedEx(<Handle>handle, <Operation>transa, <Operation>transb, m, n, k, <const void*>alpha, <const void*>A, <runtime.DataType>Atype, lda, strideA, <const void*>B, <runtime.DataType>Btype, ldb, strideB, <const void*>beta, <void*>C, <runtime.DataType>Ctype, ldc, strideC, batchCount, <runtime.DataType>computeType, <GemmAlgo>algo)
+            status = cublasGemmStridedBatchedEx(<Handle>handle, <Operation>transa, <Operation>transb, m, n, k, <const void*>alpha, <const void*>A, <DataType>Atype, lda, strideA, <const void*>B, <DataType>Btype, ldb, strideB, <const void*>beta, <void*>C, <DataType>Ctype, ldc, strideC, batchCount, <DataType>computeType, <GemmAlgo>algo)
     check_status(status)
