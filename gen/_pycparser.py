@@ -96,10 +96,16 @@ deref = type_base_type
 # Opaque type declarations
 
 def is_opaque_type_decl_node(node):
+    def pred(node):
+        if isinstance(node, c_ast.Struct):
+            return True
+        if isinstance(node, c_ast.IdentifierType) and node.names == ['void']:
+            return True
+        return False
     return (isinstance(node, c_ast.Typedef) and
             isinstance(node.type, c_ast.PtrDecl) and
             isinstance(node.type.type, c_ast.TypeDecl) and
-            isinstance(node.type.type.type, c_ast.Struct))
+            pred(node.type.type.type))
 
 
 def opaque_type_name(node):

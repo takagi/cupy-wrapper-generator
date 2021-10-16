@@ -17,14 +17,15 @@ def generate_external_declaration(name, env):
         arg_type_node = _pycparser.argument_type_node(arg_node)
         arg_type, is_array = _type_decl.cupy_type(arg_type_node, env)
         if arg_name is None:
-            return arg_type
+            return arg_type  # when appears? solo void?
         if is_array:
             arg_name += '[]'
         return f'{arg_type} {arg_name}'
     func_node = _environment.environment_function_node(name, env)
     ret_type_node = _pycparser.function_ret_type_node(func_node)
     arg_nodes = _pycparser.function_arg_nodes(func_node)
-    ret_type, _ = _type_decl.cupy_type(ret_type_node, env)
+    ret_type, is_array = _type_decl.cupy_type(ret_type_node, env)
+    assert not is_array
     args = [argaux(arg_node, env) for arg_node in arg_nodes]
     return f'{ret_type} {name}({", ".join(args)})'
 
@@ -40,7 +41,7 @@ def generate_wrapper_declaration(name, env):
         arg_type_node = _pycparser.argument_type_node(arg_node)
         arg_type = _type_decl.erased_type(arg_type_node, env)
         if arg_name is None:
-            return arg_type
+            return arg_type  # when apperas? solo void?
         return f'{arg_type} {arg_name}'
     func_node = _environment.environment_function_node(name, env)
     arg_nodes = _pycparser.function_arg_nodes(func_node)
@@ -264,3 +265,118 @@ def generate_enum_stub(name, env):
     else:
         cuda_type = _enum_decl.cuda_type(enum_node)
         return f'typedef enum{{}} {cuda_type};'
+
+
+def generate_function_hip(name, env):
+    def aux_cuda_declarator(hip_yes, name, env):
+        def argaux(arg_node, env):
+            arg_name = _pycparser.argument_name(arg_node)
+            arg_type_node = _pycparser.argument_type_node(arg_node)
+            arg_type, is_array = _type_decl.cupy_type(arg_type_node, env)
+            if is_array:
+                arg_name += '[]'
+            return f'{arg_type} {arg_name}'
+        func_node = _environment.environment_function_node(name, env)
+        ret_type_node = _pycparser.function_ret_type_node(func_node)
+        arg_nodes = _pycparser.function_arg_nodes(func_node)
+        ret_type, is_array = _type_decl.cupy_type(ret_type_node, env)
+        assert not is_array
+        args = [argaux(arg_node, env) for arg_node in arg_nodes]
+        if hip_yes:
+            return f'{ret_type} {name}({", ".join(args)})'
+        else:
+            return f'{ret_type} {name}(...)'
+
+    def aux_hip_call(name, env):
+        def argaux(arg_node, env):
+            arg_name = _pycparser.argument_name(arg_node)
+            arg_type_node = _pycparser.argument_type_node(arg_node)
+            if _pycparser.is_raw_type_decl_node(arg_type_node):
+                assert _pycparser.type_qualifiers(arg_type_node) == []
+                cuda_name = _pycparser.type_name(arg_type_node)
+                if _environment.environment_is_opaque_type(cuda_name, env):
+                    return arg_name
+                elif _environment.environment_is_enum(cuda_name, env):
+                    hip_name = (
+                        _environment.environment_enum_hip_name(cuda_name, env))
+                    return f'convert_{hip_name}({arg_name})'
+                else:
+                    return arg_name
+            elif _pycparser.is_pointer_type_decl_node(arg_type_node):
+                arg_cuda_type, _ = _type_decl.cuda_type(arg_type_node)
+                arg_hip_type, _ = _type_decl.hip_type(arg_type_node)
+                if arg_cuda_type == arg_hip_type:
+                    return arg_name
+                else:
+                    return f'reinterpret_cast<{arg_hip_type}>({arg_name})'
+            elif _pycparser.is_array_type_decl_node(arg_type_node):
+                arg_cuda_type, _ = _type_decl.cuda_type(arg_type_node)
+                arg_hip_type, _ = _type_decl.hip_type(arg_type_node)
+                if arg_cuda_type == arg_hip_type:
+                    return arg_name
+                else:
+                    return f'reinterpret_cast<{arg_hip_type}*>({arg_name})'
+            else:
+                assert False
+        func_node = _environment.environment_function_node(name, env)
+        arg_nodes = _pycparser.function_arg_nodes(func_node)
+        hip_name = _func_decl.hip_name(func_node, env)
+        args = [argaux(arg_node, env) for arg_node in arg_nodes]
+        return f'{hip_name}({", ".join(args)})'
+
+    hip_yes, hip_since, hip_until = (
+        _environment.environment_function_hip_spec(name, env))
+    assert hip_until is None
+
+    code = []
+    cuda_decl = aux_cuda_declarator(hip_yes, name, env)
+    code.append(f'{cuda_decl} {{')
+
+    hip_call = aux_hip_call(name, env)
+    hip_gurad = _environment.environment_function_hip_guard(name, env)
+    hip_not_supported = (
+        _environment.environment_status_enum_hip_not_supported(env))
+    if hip_yes:
+        if hip_since is None:
+            if hip_gurad is not None:
+                code.append(gen.util.indent(hip_gurad))
+            code.append(f'    return {hip_call};')
+        else:
+            code.append(f'    #if HIP_VERSION < {hip_since}')
+            code.append(f'    return {hip_not_supported};')
+            code.append('    #else')
+            if hip_gurad is not None:
+                code.append(gen.util.indent(hip_gurad))
+            code.append(f'    return {hip_call};')
+            code.append('    #endif')
+    else:
+        code.append(f'    return {hip_not_supported};')
+    code.append('}')
+
+    return '\n'.join(code)
+
+
+def generate_opaque_type_hip(name, env):
+    opaque_node = _environment.environment_opaque_type_node(name, env)
+    hip_yes, hip_since, hip_until = (
+        _environment.environment_opaque_type_hip_spec(name, env))
+    assert hip_until is None
+    cuda_type = _opaque_decl.cuda_type(opaque_node)
+    if hip_yes:
+        hip_type = _opaque_decl.hip_type(opaque_node)
+        if hip_since is None:
+            return f'typedef {hip_type} {cuda_type};'
+        else:
+            return f'''#if HIP_VERSION < {hip_since}
+typedef enum {{}} {cuda_type};
+#else
+typedef {hip_type} {cuda_type};
+#endif'''
+    else:
+        return f'typedef enum {{}} {cuda_type};'
+
+
+def generate_enum_hip(name, env):
+    enum_node = _environment.environment_enum_node(name, env)
+    cuda_type = _enum_decl.cuda_type(enum_node)
+    return f'typdef enum {{}} {cuda_type}'

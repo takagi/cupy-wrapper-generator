@@ -15,3 +15,7 @@ def erased_type(node):
 
 def cuda_type(node):
     return _pycparser.opaque_type_name(node)
+
+
+def hip_type(node):
+    raise NotImplementedError

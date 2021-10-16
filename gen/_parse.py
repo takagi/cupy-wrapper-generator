@@ -22,6 +22,7 @@ def parse_headers(config):
             ast = pycparser.parse_file(temp_c_path, use_cpp=True, cpp_args=[
                 f'-I{include_path}',
                 f'-I{package_path}include/',  # for fake libc headers
+                '-D __HIP_PLATFORM_AMD__',
                 '-D __attribute__(n)=',
                 '-D __inline__='])
         ret.append((version, ast))

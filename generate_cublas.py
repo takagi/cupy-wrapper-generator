@@ -161,6 +161,42 @@ def _emit_stub_header(env, root_path, assets_path):
         f.write(code)
 
 
+def _emit_hip_header(env, root_path, assets_path):
+    print('Generating hip/cupy_hipblas.h...')
+
+    # Generate opaque type mapping
+    opaque_map = []
+    for name in gen.environment_opaque_types(env):
+        opaque_map.append(gen.generate_opaque_type_hip(name, env))
+    opaque_map = '\n'.join(opaque_map)
+
+    # Generate enum mapping
+    enum_map = []
+    for name in gen.environment_enums(env):
+        enum_map.append(gen.generate_enum_hip(name, env))
+    enum_map = '\n'.join(enum_map)
+
+    # Generate function mapping
+    func_map = []
+    for name in gen.environment_functions(env):
+        func_map.append(gen.generate_function_hip(name, env))
+    func_map = '\n\n'.join(func_map)
+
+    # Read the template file
+    template_path = os.path.join(assets_path, 'hip', 'cupy_hipblas.h')
+    template = gen.read_template(template_path)
+
+    # Write the header file
+    out_path = os.path.join(root_path, 'out', 'hip')
+    os.makedirs(out_path, exist_ok=True)
+    out_path = os.path.join(out_path, 'cupy_hipblas.h')
+    with open(out_path, 'w') as f:
+        code = template.format(opaque_map=opaque_map,
+                               enum_map=enum_map,
+                               func_map=func_map)
+        f.write(code)
+
+
 def main(args):
     root_path = os.path.dirname(__file__)
     assets_path = os.path.join(root_path, 'cublas_assets')
