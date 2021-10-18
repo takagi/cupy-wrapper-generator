@@ -128,3 +128,133 @@ def cuda_type(node):
         return base_name, True
     else:
         raise TypeError('Invalid type')
+
+
+def hip_type(node, env):
+    def aux(name, env):
+        name = _pycparser.type_name(node)
+        # Special types
+        if name == 'cudaDataType':
+            return 'hipblasDataType_t'
+        if name =='cudaDataType_t':
+            return 'hipblasDataType_t'
+        if name == 'libraryProperType':
+            assert False
+        if name == 'cudaStream_t':
+            return 'hipStream_t'
+        if name == 'cuComplex':
+            return 'hipblasComplex'
+        if name == 'cuDoubleComplex':
+            return 'hipblasDoubleComplex'
+        # Opaque types
+        if _environment.environment_is_opaque_type(name, env):
+            return _environment.environment_opaque_type_hip_name(name, env)
+        # Enumerators
+        if _environment.environment_is_enum(name, env):
+            return _environment.environment_enum_hip_name(name, env)
+        # Otherwise (e.g. int)
+        return name
+
+    if _pycparser.is_raw_type_decl_node(node):
+        name = _pycparser.type_name(node)
+        quals = _pycparser.type_qualifiers(node)
+        hip_name = aux(name, env)
+        return ' '.join(quals + [hip_name]), False
+    elif _pycparser.is_pointer_type_decl_node(node):
+        base_type = _pycparser.type_base_type(node)
+        quals = _pycparser.type_qualifiers(node)
+        base_hip_name, is_array = hip_type(base_type, env)
+        assert not is_array
+        return ' '.join([base_hip_name + '*'] + quals), False
+    elif _pycparser.is_array_type_decl_node(node):
+        base_type = _pycparser.type_base_type(node)
+        base_hip_name, is_array = hip_type(base_type, env)
+        assert not is_array
+        return base_hip_name, True
+    else:
+        raise TypeError('Invalid type')
+
+
+def hip_mapping(node, env):
+    if _pycparser.is_raw_type_decl_node(node):
+        name = _pycparser.type_name(node)
+        # Special types
+        if name == 'cudaDataType':
+            return 'convert-hip', 'convert_hipblasDatatype_t'
+        if name == 'cudaDataType_t':
+            return 'convert-hip', 'convert_hipblasDatatype_t'
+        if name == 'libraryProperType':
+            assert False
+        if name == 'cudaStream_t':
+            return 'transparent', None
+        if name == 'cuComplex':
+            raise NotImplementedError
+        if name == 'cuDoubleComplex':
+            raise NotImplementedError
+        # Opaque types
+        if _environment.environment_is_opaque_type(name, env):
+            return 'transparent', None
+        # Enumerators
+        if _environment.environment_is_enum(name, env):
+            hip_name = _environment.environment_enum_hip_name(name, env)
+            return 'convert-hip', f'convert_{hip_name}'
+        # Otherwise (e.g. int)
+        return 'transparent', None
+    elif _pycparser.is_pointer_type_decl_node(node):
+        base_type = _pycparser.type_base_type2(node)
+        base_name = _pycparser.type_name(base_type)
+        # Special types
+        if base_name == 'cudaDataType':
+            assert False
+        if base_name == 'cudaDataType_t':
+            assert False
+        if base_name == 'libraryProperType':
+            assert False
+        if base_name == 'cudaStream_t':
+            return 'transparent', None
+        if base_name == 'cuComplex':
+            hip_name, is_array = hip_type(node, env)
+            assert not is_array
+            return 'reinterpret-cast', hip_name
+        if base_name == 'cuDoubleComplex':
+            hip_name, is_array = hip_type(node, env)
+            assert not is_array
+            return 'reinterpret-cast', hip_name
+        # Opaque types
+        if _environment.environment_is_opaque_type(base_name, env):
+            return 'transparent', None
+        # Enumerators
+        if _environment.environment_is_enum(base_name, env):
+            return 'convert-cuda', f'convert_{base_name}'
+        # Otherwise (e.g. int)
+        return 'transparent', None
+    elif _pycparser.is_array_type_decl_node(node):
+        base_type = _pycparser.type_base_type2(node)
+        base_name = _pycparser.type_name(base_type)
+        # Special types
+        if base_name == 'cudaDataType':
+            assert False
+        if base_name == 'cudaDataType_t':
+            assert False
+        if base_name == 'libraryProperType':
+            assert False
+        if base_name == 'cudaStream_t':
+            assert False
+        if base_name == 'cuComplex':
+            hip_name, is_array = hip_type(node, env)
+            assert is_array
+            return 'reinterpret-cast', hip_name + '*'
+        if base_name == 'cuDoubleComplex':
+            hip_name, is_array = hip_type(node, env)
+            assert is_array
+            return 'reinterpret-cast', hip_name + '*'
+        # Opaque types
+        if _environment.environment_is_opaque_type(base_name, env):
+            assert False
+        # Enumerators
+        if _environment.environment_is_enum(base_name, env):
+            assert False
+        # Otherwise (e.g. int)
+        return 'transparent', None
+    else:
+        raise TypeError('Invalid type')

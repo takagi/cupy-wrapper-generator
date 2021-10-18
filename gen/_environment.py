@@ -128,6 +128,25 @@ def environment_function_except(name, env):
         assert False
 
 
+def environment_function_hip_spec(name, env):
+    func_hip = _environment_function(name, env).get('hip')
+    if func_hip is None:
+        return False, None, None
+    # ...
+    return True, None, None
+
+
+def environment_function_hip_name(name, env):
+    func_hip = _environment_function(name, env).get('hip')
+    if func_hip is None:
+        raise ValueError('HIP counterpart not found')
+    return func_hip['name']
+
+
+def environment_function_hip_guard(name, env):
+    return None
+
+
 # Enums
 
 def environment_enums(env):
@@ -173,6 +192,25 @@ def environment_status_enum_node(env):
     raise ValueError('Status enum not found')
 
 
+def environment_enum_hip_spec(name, env):
+    enum_hip = _environment_enum(name, env).get('hip')
+    if enum_hip is None:
+        return False, None, None
+    # ...
+    return True, None, None
+
+
+def environment_enum_hip_name(name, env):
+    enum_hip = _environment_enum(name, env).get('hip')
+    if enum_hip is None:
+        raise ValueError('HIP counterpart not found')
+    return enum_hip['name']
+
+
+def environment_status_enum_hip_not_supported(env):
+    return 'HIPBLAS_STATUS_NOT_SUPPORTED'
+
+
 # Opaque types
 
 def environment_opaque_types(env):
@@ -208,3 +246,18 @@ def environment_opaque_types_diff(env, old_version, new_version):
         if old_version in versions and new_version not in versions:
             removed.append(name)
     return added, removed
+
+
+def environment_opaque_type_hip_spec(name, env):
+    opaque_hip = _environment_opaque_type(name, env).get('hip')
+    if opaque_hip is None:
+        return False, None, None
+    # ...
+    return True, None, None
+
+
+def environment_opaque_type_hip_name(name, env):
+    opaque_hip = _environment_opaque_type(name, env).get('hip')
+    if opaque_hip is None:
+        raise ValueError('HIP counterpart not found')
+    return opaque_hip['name']

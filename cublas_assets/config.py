@@ -47,6 +47,7 @@
         'cublasGetPointerMode_v2': {
             'return': 'mode',
             'except?': -1,
+            'hip': 'skip',
         },
         'cublasSetPointerMode_v2': {
             'return': None,
@@ -54,6 +55,7 @@
         'cublasGetAtomicsMode': {
             'return': 'mode',
             'except?': -1,
+            'hip': 'skip',
         },
         'cublasSetAtomicsMode': {
             'return': None,
@@ -61,6 +63,7 @@
         'cublasGetMathMode': {
             'return': 'mode',
             'except?': -1,
+            'hip': 'skip',
         },
         'cublasSetMathMode': {
             'return': None,

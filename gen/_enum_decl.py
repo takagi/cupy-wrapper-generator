@@ -15,3 +15,9 @@ def erased_type(node):
 
 def cuda_type(node):
     return _pycparser.enum_name(node)
+
+
+def hip_type(node, env):
+    cuda_name = _pycparser.enum_name(node)
+    hip_name = _environment.environment_enum_hip_name(cuda_name, env)
+    return hip_name

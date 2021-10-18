@@ -182,6 +182,11 @@ def _emit_hip_header(env, root_path, assets_path):
         func_map.append(gen.generate_function_hip(name, env))
     func_map = '\n\n'.join(func_map)
 
+    print(opaque_map)
+    print(enum_map)
+    print(func_map)
+    return
+
     # Read the template file
     template_path = os.path.join(assets_path, 'hip', 'cupy_hipblas.h')
     template = gen.read_template(template_path)
@@ -208,16 +213,28 @@ def main(args):
     # Read header files of each CUDA version
     headers = gen.parse_headers(config)
 
+    config2 = {
+        'versions': [
+            ('4.3', '/opt/rocm-4.3.1/include/'),
+        ],
+        'headers': ['hipblas.h'],
+#        'patterns': {
+#            'function': r'hipblas([A-Z][^_]*)(:?_v2|)',
+#            'type': r'hipblas([A-Z].*)_t',
+#        },
+    }
+    hip_headers = gen.parse_headers(config2)
+
     # Analyze the header files across the CUDA versions and get an environment
     # out of them
-    env = gen.analyze_headers(headers, config)
+    env = gen.analyze_headers(headers, hip_headers, config)
 
     # Emit output files
     _emit_cython_pyx(env, root_path, assets_path)     # cuda/libs/cublas.pyx
     _emit_cython_pxd(env, root_path, assets_path)     # cuda/libs/cublas.pxd
     _emit_compat_header(env, root_path, assets_path)  # cuda/cupy_cublas.h
     _emit_stub_header(env, root_path, assets_path)    # stub/cupy_cublas.h
-    # _emit_hip_header()     # hip/cupy_hipblas.h
+    _emit_hip_header(env, root_path, assets_path)     # hip/cupy_hipblas.h
     print('Done')
 
 

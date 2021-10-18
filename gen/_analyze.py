@@ -4,7 +4,7 @@ from gen import _environment
 from gen import _pycparser
 
 
-def _collect_func_decls(headers, config):
+def _collect_func_decls(headers, hip_headers, config):
     pattern = re.compile(config['patterns']['function'])
     decls = {}
     skip_list = []
@@ -32,7 +32,10 @@ def _collect_func_decls(headers, config):
                 continue
 
             if name not in decls:
-                decls[name] = dict(node=None, versions=[], **func_config)
+                decls[name] = {'node': None, 'versions': []}
+                for key in ['return', 'stream', 'except', 'except?']:
+                    if key in func_config:
+                        decls[name][key] = func_config[key]
             decls[name]['node'] = node
             decls[name]['versions'].append(version)
 
@@ -53,10 +56,31 @@ def _collect_func_decls(headers, config):
             elif old in versions and new not in versions:
                 print(f"'{name}' is removed in version {new}")
 
+    hip_index = {}
+    for name, func in decls.items():
+        match = pattern.fullmatch(name)
+        hip_name = 'hipblas' + match[1]
+        hip_index[hip_name] = name, func
+    for version, nodes in hip_headers:
+        for node in nodes:
+            if not _pycparser.is_func_decl_node(node):
+                continue
+
+            name = _pycparser.function_name(node)
+            foo = hip_index.get(name)
+            if foo is None:
+                continue
+            cuda_name, func = foo
+
+            hip_config = config['functions'][cuda_name].get('hip')
+            if hip_config is not None and hip_config == 'skip':
+                continue
+            func['hip'] = {'name': name}
+
     return decls
 
 
-def _collect_enum_decls(headers, config):
+def _collect_enum_decls(headers, hip_headers, config):
     pattern = re.compile(config['patterns']['type'])
     decls = {}
     for version, nodes in headers:
@@ -82,10 +106,28 @@ def _collect_enum_decls(headers, config):
             if old in versions and new not in versions:
                 print(f"'{name}' is removed in version {new}")
 
+    hip_index = {}
+    for name, enum in decls.items():
+        match = pattern.fullmatch(name)
+        hip_name = 'hipblas' + match[1] + '_t'
+        hip_index[hip_name] = name, enum
+    for version, nodes in hip_headers:
+        for node in nodes:
+            if not _pycparser.is_enum_decl_node(node):
+                continue
+
+            hip_name = _pycparser.enum_name(node)
+            foo = hip_index.get(hip_name)
+            if foo is None:
+                continue
+            cuda_name, enum = foo
+
+            enum['hip'] = {'name': hip_name}
+
     return decls
 
 
-def _collect_opaque_type_decls(headers, config):
+def _collect_opaque_type_decls(headers, hip_headers, config):
     pattern = re.compile(config['patterns']['type'])
     decls = {}
     for version, nodes in headers:
@@ -111,23 +153,42 @@ def _collect_opaque_type_decls(headers, config):
             if old in versions and new not in versions:
                 print(f"'{name}' is removed in version {new}")
 
+    hip_index = {}
+    for name, opaque in decls.items():
+        match = pattern.fullmatch(name)
+        hip_name = 'hipblas' + match[1] + '_t'
+        hip_index[hip_name] = name, opaque
+    for version, nodes in hip_headers:
+        for node in nodes:
+            if not _pycparser.is_opaque_type_decl_node(node):
+                continue
+
+            hip_name = _pycparser.opaque_type_name(node)
+            foo = hip_index.get(hip_name)
+            if foo is None:
+                continue
+            cuda_name, opaque = foo
+
+            opaque['hip'] = {'name': hip_name}
+
     return decls
 
 
-def analyze_headers(headers, config):
+def analyze_headers(headers, hip_headers, config):
     versions = [version for version, _ in headers]
     patterns = config['patterns']
 
     print('Collecting functions...')
-    func_decls = _collect_func_decls(headers, config)
+    func_decls = _collect_func_decls(headers, hip_headers, config)
     print(f'Collected {len(func_decls)} function(s)')
 
     print('Collecting opaque types...')
-    opaque_type_decls = _collect_opaque_type_decls(headers, config)
+    opaque_type_decls = _collect_opaque_type_decls(
+        headers, hip_headers, config)
     print(f'Collected {len(opaque_type_decls)} opaque type(s)')
 
     print('Collecting enums...')
-    enum_decls = _collect_enum_decls(headers, config)
+    enum_decls = _collect_enum_decls(headers, hip_headers, config)
     print(f'Collected {len(enum_decls)} enum(s)')
 
     return _environment.make_environment(
