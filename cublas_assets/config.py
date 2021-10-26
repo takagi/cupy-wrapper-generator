@@ -18,7 +18,7 @@
 
         'cublasCreate_v2': {
             'return': 'handle',
-            'except?': 0
+            'except?': 0,
         },
         'cublasDestroy_v2': {
             'return': None,
@@ -26,6 +26,7 @@
         'cublasGetVersion_v2': {
             'return': 'version',
             'except?': -1,
+            'hip': 'skip',  # by hand
         },
         'cublasGetProperty': {
             'return': 'value',
@@ -843,18 +844,22 @@
         'cublasStrmm_v2': {
             'return': None,
             'stream': 'set',
+            'hip': 'skip',
         },
         'cublasDtrmm_v2': {
             'return': None,
             'stream': 'set',
+            'hip': 'skip',
         },
         'cublasCtrmm_v2': {
             'return': None,
             'stream': 'set',
+            'hip': 'skip',
         },
         'cublasZtrmm_v2': {
             'return': None,
             'stream': 'set',
+            'hip': 'skip',
         },
         'cublasSgemmBatched': {
             'return': None,

@@ -1,6 +1,7 @@
-import sys
 import os
 import os.path
+import sys
+import string
 
 import gen
 import gen.util
@@ -182,11 +183,6 @@ def _emit_hip_header(env, root_path, assets_path):
         func_map.append(gen.generate_function_hip(name, env))
     func_map = '\n\n'.join(func_map)
 
-    print(opaque_map)
-    print(enum_map)
-    print(func_map)
-    return
-
     # Read the template file
     template_path = os.path.join(assets_path, 'hip', 'cupy_hipblas.h')
     template = gen.read_template(template_path)
@@ -196,9 +192,9 @@ def _emit_hip_header(env, root_path, assets_path):
     os.makedirs(out_path, exist_ok=True)
     out_path = os.path.join(out_path, 'cupy_hipblas.h')
     with open(out_path, 'w') as f:
-        code = template.format(opaque_map=opaque_map,
-                               enum_map=enum_map,
-                               func_map=func_map)
+        code = string.Template(template).substitute(opaque_map=opaque_map,
+                                                    enum_map=enum_map,
+                                                    func_map=func_map)
         f.write(code)
 
 

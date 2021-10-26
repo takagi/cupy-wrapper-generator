@@ -272,14 +272,15 @@ def generate_function_hip(name, env):
         def argaux(arg_node, env):
             arg_name = _pycparser.argument_name(arg_node)
             arg_type_node = _pycparser.argument_type_node(arg_node)
-            arg_type, is_array = _type_decl.cuda_type(arg_type_node)
+            arg_type, is_array = (
+                _type_decl.cuda_type(arg_type_node, strip_cv=False))
             if is_array:
                 arg_name += '[]'
             return f'{arg_type} {arg_name}'
         func_node = _environment.environment_function_node(name, env)
         ret_type_node = _pycparser.function_ret_type_node(func_node)
         arg_nodes = _pycparser.function_arg_nodes(func_node)
-        ret_type, is_array = _type_decl.cupy_type(ret_type_node, env)
+        ret_type, is_array = _type_decl.cuda_type(ret_type_node)
         assert not is_array
         args = [argaux(arg_node, env) for arg_node in arg_nodes]
         if hip_yes:
@@ -306,46 +307,6 @@ def generate_function_hip(name, env):
             else:
                 assert False
 
-
-
-            # arg_name = _pycparser.argument_name(arg_node)
-            # arg_type_node = _pycparser.argument_type_node(arg_node)
-            # if _pycparser.is_raw_type_decl_node(arg_type_node):
-            #     assert _pycparser.type_qualifiers(arg_type_node) == []
-            #     cuda_name = _pycparser.type_name(arg_type_node)
-            #     if _environment.environment_is_opaque_type(cuda_name, env):
-            #         return arg_name
-            #     elif _environment.environment_is_enum(cuda_name, env):
-            #         hip_name = (
-            #             _environment.environment_enum_hip_name(cuda_name, env))
-            #         return f'convert_{hip_name}({arg_name})'
-            #     else:
-            #         return arg_name
-            # elif _pycparser.is_pointer_type_decl_node(arg_type_node):
-
-
-            #     base_type = deref_deref_deref(arg_type_node)
-            #     if _environment.environment_is_opaque_type(base_type, env):
-            #         return arg_name
-            #     else:
-            #         # reinterpret_cast
-
-
-            #     arg_cuda_type, _ = _type_decl.cuda_type(arg_type_node)
-            #     arg_hip_type, _ = _type_decl.hip_type(arg_type_node, env)
-            #     if arg_cuda_type == arg_hip_type:
-            #         return arg_name
-            #     else:
-            #         return f'reinterpret_cast<{arg_hip_type}>({arg_name})'
-            # elif _pycparser.is_array_type_decl_node(arg_type_node):
-            #     arg_cuda_type, _ = _type_decl.cuda_type(arg_type_node)
-            #     arg_hip_type, _ = _type_decl.hip_type(arg_type_node, env)
-            #     if arg_cuda_type == arg_hip_type:
-            #         return arg_name
-            #     else:
-            #         return f'reinterpret_cast<{arg_hip_type}*>({arg_name})'
-            # else:
-            #     assert False
         func_node = _environment.environment_function_node(name, env)
         arg_nodes = _pycparser.function_arg_nodes(func_node)
         hip_name = _func_decl.hip_name(func_node, env)
@@ -406,5 +367,21 @@ typedef {hip_type} {cuda_type};
 
 def generate_enum_hip(name, env):
     enum_node = _environment.environment_enum_node(name, env)
+    hip_yes, hip_is_transparent, hip_since, hip_until = (
+        _environment.environment_enum_hip_spec(name, env))
+    assert hip_until is None
     cuda_type = _enum_decl.cuda_type(enum_node)
+    if hip_yes and hip_is_transparent:
+        hip_type = _enum_decl.hip_type(enum_node, env)
+        if hip_since is None:
+            return f'typedef {hip_type} {cuda_type};'
+        else:
+            return f'''#if HIP_VERSION < {hip_since}
+typedef enum {{}} {cuda_type};
+#else
+typedef {hip_type} {cuda_type};
+#endif'''
+    else:
+        return f'typedef enum {{}} {cuda_type};'
+
     return f'typdef enum {{}} {cuda_type}'

@@ -192,12 +192,21 @@ def environment_status_enum_node(env):
     raise ValueError('Status enum not found')
 
 
+_HIP_TRANSPARENT_ENUMS = [
+    'hipblasStatus_t',
+    'hipblasPointerMode_t',
+    'hipblasAtomicsMode_t',
+]
+
+
 def environment_enum_hip_spec(name, env):
     enum_hip = _environment_enum(name, env).get('hip')
     if enum_hip is None:
-        return False, None, None
+        return False, False, None, None
     # ...
-    return True, None, None
+    hip_name = enum_hip['name']
+    is_transparent = hip_name in _HIP_TRANSPARENT_ENUMS
+    return True, is_transparent, None, None
 
 
 def environment_enum_hip_name(name, env):

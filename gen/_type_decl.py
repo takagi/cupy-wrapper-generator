@@ -110,27 +110,33 @@ def erased_type(node, env):
         raise TypeError('Invalid type')
 
 
-def cuda_type(node):
+def cuda_type(node, strip_cv=False):
     if _pycparser.is_raw_type_decl_node(node):
         name = _pycparser.type_name(node)
-        quals = _pycparser.type_qualifiers(node)
-        return ' '.join(quals + [name]), False
+        if strip_cv:
+            return name, False
+        else:
+            quals = _pycparser.type_qualifiers(node)
+            return ' '.join(quals + [name]), False
     elif _pycparser.is_pointer_type_decl_node(node):
         base_type = _pycparser.type_base_type(node)
-        quals = _pycparser.type_qualifiers(node)
-        base_name, is_array = cuda_type(base_type)
+        base_name, is_array = cuda_type(base_type, strip_cv=strip_cv)
         assert not is_array
-        return ' '.join([base_name + '*'] + quals), False
+        if strip_cv:
+            return base_name + '*', False
+        else:
+            quals = _pycparser.type_qualifiers(node)
+            return ' '.join([base_name + '*'] + quals), False
     elif _pycparser.is_array_type_decl_node(node):
         base_type = _pycparser.type_base_type(node)
-        base_name, is_array = cuda_type(base_type)
+        base_name, is_array = cuda_type(base_type, strip_cv=strip_cv)
         assert not is_array
         return base_name, True
     else:
         raise TypeError('Invalid type')
 
 
-def hip_type(node, env):
+def hip_type(node, env, strip_cv=False):
     def aux(name, env):
         name = _pycparser.type_name(node)
         # Special types
@@ -157,18 +163,24 @@ def hip_type(node, env):
 
     if _pycparser.is_raw_type_decl_node(node):
         name = _pycparser.type_name(node)
-        quals = _pycparser.type_qualifiers(node)
         hip_name = aux(name, env)
-        return ' '.join(quals + [hip_name]), False
+        if strip_cv:
+            return hip_name, False
+        else:
+            quals = _pycparser.type_qualifiers(node)
+            return ' '.join(quals + [hip_name]), False
     elif _pycparser.is_pointer_type_decl_node(node):
         base_type = _pycparser.type_base_type(node)
-        quals = _pycparser.type_qualifiers(node)
-        base_hip_name, is_array = hip_type(base_type, env)
+        base_hip_name, is_array = hip_type(base_type, env, strip_cv=strip_cv)
         assert not is_array
-        return ' '.join([base_hip_name + '*'] + quals), False
+        if strip_cv:
+            return base_hip_name + '*', False
+        else:
+            quals = _pycparser.type_qualifiers(node)
+            return ' '.join([base_hip_name + '*'] + quals), False
     elif _pycparser.is_array_type_decl_node(node):
         base_type = _pycparser.type_base_type(node)
-        base_hip_name, is_array = hip_type(base_type, env)
+        base_hip_name, is_array = hip_type(base_type, env, strip_cv=strip_cv)
         assert not is_array
         return base_hip_name, True
     else:
@@ -196,8 +208,13 @@ def hip_mapping(node, env):
             return 'transparent', None
         # Enumerators
         if _environment.environment_is_enum(name, env):
+            _, is_transparent, _, _ = (
+                _environment.environment_enum_hip_spec(name, env))
             hip_name = _environment.environment_enum_hip_name(name, env)
-            return 'convert-hip', f'convert_{hip_name}'
+            if is_transparent:
+                return 'transparent', None
+            else:
+                return 'convert-hip', f'convert_{hip_name}'
         # Otherwise (e.g. int)
         return 'transparent', None
     elif _pycparser.is_pointer_type_decl_node(node):
@@ -213,11 +230,11 @@ def hip_mapping(node, env):
         if base_name == 'cudaStream_t':
             return 'transparent', None
         if base_name == 'cuComplex':
-            hip_name, is_array = hip_type(node, env)
+            hip_name, is_array = hip_type(node, env, strip_cv=False)
             assert not is_array
             return 'reinterpret-cast', hip_name
         if base_name == 'cuDoubleComplex':
-            hip_name, is_array = hip_type(node, env)
+            hip_name, is_array = hip_type(node, env, strip_cv=False)
             assert not is_array
             return 'reinterpret-cast', hip_name
         # Opaque types
@@ -241,11 +258,11 @@ def hip_mapping(node, env):
         if base_name == 'cudaStream_t':
             assert False
         if base_name == 'cuComplex':
-            hip_name, is_array = hip_type(node, env)
+            hip_name, is_array = hip_type(node, env, strip_cv=False)
             assert is_array
             return 'reinterpret-cast', hip_name + '*'
         if base_name == 'cuDoubleComplex':
-            hip_name, is_array = hip_type(node, env)
+            hip_name, is_array = hip_type(node, env, strip_cv=False)
             assert is_array
             return 'reinterpret-cast', hip_name + '*'
         # Opaque types
