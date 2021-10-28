@@ -289,16 +289,26 @@ def generate_function_hip(name, env):
             return f'{ret_type} {name}(...)'
 
     def aux_hip_call(name, env):
-        def argaux(arg_node, env):
-            arg_name = _pycparser.argument_name(arg_node)
-            arg_type_node = _pycparser.argument_type_node(arg_node)
-            map_kind, map_arg = _type_decl.hip_mapping(arg_type_node, env)
+        def argaux(cuda_arg_node, hip_arg_node, env):
+            arg_name = _pycparser.argument_name(cuda_arg_node)
+            cuda_arg_type_node = _pycparser.argument_type_node(cuda_arg_node)
+            hip_arg_type_node = _pycparser.argument_type_node(hip_arg_node)
+            map_kind, map_arg = _type_decl.hip_mapping(
+                cuda_arg_type_node, hip_arg_type_node, env)
             if map_kind == 'transparent':
                 assert map_arg is None
                 return arg_name
             elif map_kind == 'reinterpret-cast':
                 # `map_arg` contains the HIP-side type casting to
                 return f'reinterpret_cast<{map_arg}>({arg_name})'
+            elif map_kind == 'const-cast':
+                # ...
+                return f'const_cast<{map_arg}>({arg_name})'
+            elif map_kind == 'const-cast-reinterpret-cast':
+                # ...
+                map_arg1, map_arg2 = map_arg
+                return (f'reinterpret_cast<{map_arg2}>('
+                        f'const_cast<{map_arg1}>({arg_name}))')
             elif map_kind == 'convert-hip':
                 # `map_arg` contains the name of a conversion function
                 return f'{map_arg}({arg_name})'
@@ -307,15 +317,22 @@ def generate_function_hip(name, env):
             else:
                 assert False
 
-        func_node = _environment.environment_function_node(name, env)
-        arg_nodes = _pycparser.function_arg_nodes(func_node)
-        hip_name = _func_decl.hip_name(func_node, env)
-        args = [argaux(arg_node, env) for arg_node in arg_nodes]
+        cuda_func_node = _environment.environment_function_node(name, env)
+        hip_func_node = _environment.environment_function_hip_node(name, env)
+        cuda_arg_nodes = _pycparser.function_arg_nodes(cuda_func_node)
+        hip_arg_nodes = _pycparser.function_arg_nodes(hip_func_node)
+        hip_name = _func_decl.hip_name(cuda_func_node, env)
+        args = [argaux(cuda_arg_node, hip_arg_node, env)
+                for cuda_arg_node, hip_arg_node
+                in zip(cuda_arg_nodes, hip_arg_nodes)]
         return f'{hip_name}({", ".join(args)})'
 
-    hip_yes, hip_since, hip_until = (
+    hip_skipped, hip_yes, hip_since, hip_until = (
         _environment.environment_function_hip_spec(name, env))
     assert hip_until is None
+
+    if hip_skipped:
+        return None
 
     code = []
     cuda_decl = aux_cuda_declarator(hip_yes, name, env)
@@ -325,17 +342,12 @@ def generate_function_hip(name, env):
         _environment.environment_status_enum_hip_not_supported(env))
     if hip_yes:
         hip_call = aux_hip_call(name, env)
-        hip_gurad = _environment.environment_function_hip_guard(name, env)
         if hip_since is None:
-            if hip_gurad is not None:
-                code.append(gen.util.indent(hip_gurad))
             code.append(f'    return {hip_call};')
         else:
             code.append(f'    #if HIP_VERSION < {hip_since}')
             code.append(f'    return {hip_not_supported};')
             code.append('    #else')
-            if hip_gurad is not None:
-                code.append(gen.util.indent(hip_gurad))
             code.append(f'    return {hip_call};')
             code.append('    #endif')
     else:

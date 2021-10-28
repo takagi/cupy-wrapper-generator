@@ -12,6 +12,10 @@ def partition(pred, seq):
     return a, b
 
 
+def compact(seq):
+    return list(filter(lambda x: x is not None, seq))
+
+
 def _cuda_version(version):
     version = float(version)
     major = math.floor(version)

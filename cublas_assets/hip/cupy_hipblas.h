@@ -67,12 +67,100 @@ static hipblasDatatype_t convert_hipblasDatatype_t(cudaDataType_t type) {
 
 $func_map
 
-cublasStatus_t cublasGetVersion(cublasHandle_t handle, int *version) {
+cublasStatus_t cublasGetVersion_v2(cublasHandle_t handle, int *version) {
     // We use the rocBLAS version here because 1. it is the underlying workhorse,
     // and 2. we might get rid of the hipBLAS layer at some point (see TODO above).
     // ex: the rocBLAS version string is 2.22.0.2367-b2cceba in ROCm 3.5.0
     *version = 10000 * ROCBLAS_VERSION_MAJOR + 100 * ROCBLAS_VERSION_MINOR + ROCBLAS_VERSION_PATCH;
     return HIPBLAS_STATUS_SUCCESS;
+}
+
+cublasStatus_t cublasSgemmEx(cublasHandle_t handle, cublasOperation_t transa, cublasOperation_t transb,
+			     int m, int n, int k, const float *alpha,
+			     const void *A, cudaDataType_t Atype, int lda,
+			     const void *B, cudaDataType_t Btype, int ldb,
+			     const float *beta,
+			     void *C, cudaDataType_t Ctype, int ldc) {
+    if (Atype != 0 || Btype != 0 || Ctype != 0) {  // CUDA_R_32F
+        return HIPBLAS_STATUS_NOT_SUPPORTED;
+    }
+    return hipblasSgemm(handle, convert_hipblasOperation_t(transa), convert_hipblasOperation_t(transb),
+                        m, n, k, alpha,
+                        static_cast<const float*>(A), lda,
+                        static_cast<const float*>(B), ldb, beta,
+                        static_cast<float*>(C), ldc);
+}
+
+cublasStatus_t cublasGemmEx(cublasHandle_t handle, cublasOperation_t transa, cublasOperation_t transb,
+                            int m, int n, int k, const void *alpha,
+                            const void *A, cudaDataType_t Atype, int lda,
+                            const void *B, cudaDataType_t Btype, int ldb,
+                            const void *beta,
+                            void *C, cudaDataType_t Ctype, int ldc,
+                            cudaDataType_t computeType, cublasGemmAlgo_t algo) {
+    if (algo != -1) {  // must be CUBLAS_GEMM_DEFAULT
+        return HIPBLAS_STATUS_NOT_SUPPORTED;
+    }
+    return hipblasGemmEx(handle, convert_hipblasOperation_t(transa), convert_hipblasOperation_t(transb),
+                         m, n, k, alpha,
+                         A, convert_hipblasDatatype_t(Atype), lda,
+                         B, convert_hipblasDatatype_t(Btype), ldb,
+                         beta,
+                         C, convert_hipblasDatatype_t(Ctype), ldc,
+                         convert_hipblasDatatype_t(computeType),
+                         HIPBLAS_GEMM_DEFAULT);
+}
+
+cublasStatus_t cublasGemmEx_v11(...) {
+    return HIPBLAS_STATUS_NOT_SUPPORTED;
+}
+
+cublasStatus_t cublasGemmBatchedEx(cublasHandle_t handle, cublasOperation_t transa, cublasOperation_t transb,
+                                   int m, int n, int k, const void* alpha,
+                                   const void* const A[], cudaDataType Atype, int lda,
+                                   const void* const B[], cudaDataType Btype, int ldb,
+                                   const void* beta,
+                                   void* const C[],  cudaDataType Ctype, int ldc,
+                                   int batchCount, cudaDataType_t computeType, cublasGemmAlgo_t algo) {
+    if (algo != -1) {  // must be CUBLAS_GEMM_DEFAULT
+        return HIPBLAS_STATUS_NOT_SUPPORTED;
+    }
+    return hipblasGemmBatchedEx(handle, convert_hipblasOperation_t(transa), convert_hipblasOperation_t(transb),
+                                m, n, k, alpha,
+                                const_cast<const void**>(A), convert_hipblasDatatype_t(Atype), lda,
+                                const_cast<const void**>(B), convert_hipblasDatatype_t(Btype), ldb,
+                                beta,
+                                const_cast<void**>(C), convert_hipblasDatatype_t(Ctype), ldc,
+                                batchCount, convert_hipblasDatatype_t(computeType),
+				HIPBLAS_GEMM_DEFAULT);
+}
+
+cublasStatus_t cublasGemmBatchedEx_v11(...) {
+    return HIPBLAS_STATUS_NOT_SUPPORTED;
+}
+
+cublasStatus_t cublasGemmStridedBatchedEx(cublasHandle_t handle, cublasOperation_t transa, cublasOperation_t transb,
+					  int m, int n, int k, const void* alpha,
+					  const void* A, cudaDataType Atype, int lda, long long int strideA,
+					  const void* B, cudaDataType Btype, int ldb, long long int strideB,
+					  const void* beta,
+					  void* C, cudaDataType Ctype, int ldc, long long int strideC,
+					  int batchCount, cudaDataType_t computeType, cublasGemmAlgo_t algo) {
+    if (algo != -1) {  // must be CUBLAS_GEMM_DEFAULT
+        return HIPBLAS_STATUS_NOT_SUPPORTED;
+    }
+    return hipblasGemmStridedBatchedEx(handle, convert_hipblasOperation_t(transa), convert_hipblasOperation_t(transb),
+				       m, n, k, alpha,
+				       A, convert_hipblasDatatype_t(Atype), lda, strideA,
+				       B, convert_hipblasDatatype_t(Btype), ldb, strideB,
+				       beta,
+                                       C, convert_hipblasDatatype_t(Ctype), ldc, strideC,
+                                       batchCount, convert_hipblasDatatype_t(computeType),
+                                       HIPBLAS_GEMM_DEFAULT);
+}
+
+cublasStatus_t cublasGemmStridedBatchedEx_v11(...) {
+    return HIPBLAS_STATUS_NOT_SUPPORTED;
 }
 
 } // extern "C"

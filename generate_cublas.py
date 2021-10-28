@@ -181,7 +181,7 @@ def _emit_hip_header(env, root_path, assets_path):
     func_map = []
     for name in gen.environment_functions(env):
         func_map.append(gen.generate_function_hip(name, env))
-    func_map = '\n\n'.join(func_map)
+    func_map = '\n\n'.join(gen.util.compact(func_map))
 
     # Read the template file
     template_path = os.path.join(assets_path, 'hip', 'cupy_hipblas.h')

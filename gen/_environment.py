@@ -1,5 +1,6 @@
 import re
 
+from gen import _hip
 from gen import _pycparser
 from gen import _return_spec
 
@@ -128,23 +129,29 @@ def environment_function_except(name, env):
         assert False
 
 
-def environment_function_hip_spec(name, env):
-    func_hip = _environment_function(name, env).get('hip')
-    if func_hip is None:
-        return False, None, None
-    # ...
-    return True, None, None
-
-
-def environment_function_hip_name(name, env):
+def environment_function_hip_node(name, env):
     func_hip = _environment_function(name, env).get('hip')
     if func_hip is None:
         raise ValueError('HIP counterpart not found')
-    return func_hip['name']
+    return func_hip['node']
 
 
-def environment_function_hip_guard(name, env):
-    return None
+def environment_function_hip_spec(name, env):
+    func_hip = _environment_function(name, env)['hip']
+    if func_hip == 'skip':
+        return True, None, None, None
+    elif func_hip == 'not-supported':
+        return False, False, None, None
+    else:
+        # FIXME: since and until
+        return False, True, None, None
+
+
+# def environment_function_hip_name(name, env):
+#     func_hip = _environment_function(name, env).get('hip')
+#     if func_hip is None:
+#         raise ValueError('HIP counterpart not found')
+#     return func_hip['name']
 
 
 # Enums
@@ -192,31 +199,33 @@ def environment_status_enum_node(env):
     raise ValueError('Status enum not found')
 
 
-_HIP_TRANSPARENT_ENUMS = [
-    'hipblasStatus_t',
-    'hipblasPointerMode_t',
-    'hipblasAtomicsMode_t',
-]
+def environment_enum_hip_node(name, env):
+    enum_hip = _environment_enum(name, env).get('hip')
+    if enum_hip is None:
+        raise ValueError('HIP counterpart not found')
+    return enum_hip['node']
 
 
 def environment_enum_hip_spec(name, env):
     enum_hip = _environment_enum(name, env).get('hip')
     if enum_hip is None:
-        return False, False, None, None
+        return False, None, None, None
     # ...
-    hip_name = enum_hip['name']
-    is_transparent = hip_name in _HIP_TRANSPARENT_ENUMS
+    hip_node = enum_hip['node']
+    hip_name = _pycparser.enum_name(hip_node)
+    is_transparent = hip_name in _hip.HIP_TRANSPARENT_ENUMS
     return True, is_transparent, None, None
 
 
-def environment_enum_hip_name(name, env):
-    enum_hip = _environment_enum(name, env).get('hip')
-    if enum_hip is None:
-        raise ValueError('HIP counterpart not found')
-    return enum_hip['name']
+# def environment_enum_hip_name(name, env):
+#     enum_hip = _environment_enum(name, env).get('hip')
+#     if enum_hip is None:
+#         raise ValueError('HIP counterpart not found')
+#     return enum_hip['name']
 
 
 def environment_status_enum_hip_not_supported(env):
+    # FIXME: other HIP libraries
     return 'HIPBLAS_STATUS_NOT_SUPPORTED'
 
 
@@ -257,6 +266,13 @@ def environment_opaque_types_diff(env, old_version, new_version):
     return added, removed
 
 
+def environment_opaque_type_hip_node(name, env):
+    opaque_hip = _environment_opaque_type(name, env).get('hip')
+    if opaque_hip is None:
+        raise ValueError('HIP counterpart not found')
+    return opaque_hip['node']
+
+
 def environment_opaque_type_hip_spec(name, env):
     opaque_hip = _environment_opaque_type(name, env).get('hip')
     if opaque_hip is None:
@@ -265,8 +281,8 @@ def environment_opaque_type_hip_spec(name, env):
     return True, None, None
 
 
-def environment_opaque_type_hip_name(name, env):
-    opaque_hip = _environment_opaque_type(name, env).get('hip')
-    if opaque_hip is None:
-        raise ValueError('HIP counterpart not found')
-    return opaque_hip['name']
+# def environment_opaque_type_hip_name(name, env):
+#     opaque_hip = _environment_opaque_type(name, env).get('hip')
+#     if opaque_hip is None:
+#         raise ValueError('HIP counterpart not found')
+#     return opaque_hip['name']

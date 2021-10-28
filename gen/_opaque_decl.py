@@ -19,5 +19,5 @@ def cuda_type(node):
 
 def hip_type(node, env):
     cuda_name = _pycparser.opaque_type_name(node)
-    hip_name = _environment.environment_opaque_type_hip_name(cuda_name, env)
-    return hip_name
+    hip_node = _environment.environment_opaque_type_hip_node(cuda_name, env)
+    return _pycparser.opaque_type_name(hip_node)

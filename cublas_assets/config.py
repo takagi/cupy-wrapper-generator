@@ -48,7 +48,6 @@
         'cublasGetPointerMode_v2': {
             'return': 'mode',
             'except?': -1,
-            'hip': 'skip',
         },
         'cublasSetPointerMode_v2': {
             'return': None,
@@ -56,7 +55,6 @@
         'cublasGetAtomicsMode': {
             'return': 'mode',
             'except?': -1,
-            'hip': 'skip',
         },
         'cublasSetAtomicsMode': {
             'return': None,
@@ -64,7 +62,7 @@
         'cublasGetMathMode': {
             'return': 'mode',
             'except?': -1,
-            'hip': 'skip',
+            'hip': 'not-supported',
         },
         'cublasSetMathMode': {
             'return': None,
@@ -703,6 +701,7 @@
         'cublasSgemmEx': {
             'return': None,
             'stream': 'set',
+            'hip': 'skip',  # by hand
         },
         'cublasGemmEx': 'skip',  # by hand for compatibility
         'cublasCgemmEx': {
@@ -844,22 +843,22 @@
         'cublasStrmm_v2': {
             'return': None,
             'stream': 'set',
-            'hip': 'skip',
+            'hip': 'not-supported',
         },
         'cublasDtrmm_v2': {
             'return': None,
             'stream': 'set',
-            'hip': 'skip',
+            'hip': 'not-supported',
         },
         'cublasCtrmm_v2': {
             'return': None,
             'stream': 'set',
-            'hip': 'skip',
+            'hip': 'not-supported',
         },
         'cublasZtrmm_v2': {
             'return': None,
             'stream': 'set',
-            'hip': 'skip',
+            'hip': 'not-supported',
         },
         'cublasSgemmBatched': {
             'return': None,

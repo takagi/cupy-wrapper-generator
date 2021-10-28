@@ -32,8 +32,10 @@ def _collect_func_decls(headers, hip_headers, config):
                 continue
 
             if name not in decls:
-                decls[name] = {'node': None, 'versions': []}
-                for key in ['return', 'stream', 'except', 'except?']:
+                decls[name] = {'node': None,
+                               'versions': [],
+                               'hip': 'not-supported'}
+                for key in ['return', 'stream', 'except', 'except?', 'hip']:
                     if key in func_config:
                         decls[name][key] = func_config[key]
             decls[name]['node'] = node
@@ -59,7 +61,7 @@ def _collect_func_decls(headers, hip_headers, config):
     hip_index = {}
     for name, func in decls.items():
         match = pattern.fullmatch(name)
-        hip_name = 'hipblas' + match[1]
+        hip_name = 'hipblas' + match[1]  # FIXME: other HIP libraries
         hip_index[hip_name] = name, func
     for version, nodes in hip_headers:
         for node in nodes:
@@ -73,9 +75,8 @@ def _collect_func_decls(headers, hip_headers, config):
             cuda_name, func = foo
 
             hip_config = config['functions'][cuda_name].get('hip')
-            if hip_config is not None and hip_config == 'skip':
-                continue
-            func['hip'] = {'name': name}
+            if hip_config is None:
+                func['hip'] = {'node': node}
 
     return decls
 
@@ -122,7 +123,7 @@ def _collect_enum_decls(headers, hip_headers, config):
                 continue
             cuda_name, enum = foo
 
-            enum['hip'] = {'name': hip_name}
+            enum['hip'] = {'node': node}
 
     return decls
 
@@ -169,7 +170,7 @@ def _collect_opaque_type_decls(headers, hip_headers, config):
                 continue
             cuda_name, opaque = foo
 
-            opaque['hip'] = {'name': hip_name}
+            opaque['hip'] = {'node': node}
 
     return decls
 

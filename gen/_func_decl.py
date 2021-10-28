@@ -18,5 +18,6 @@ def cuda_name(node):
 
 def hip_name(node, env):
     cuda_name = _pycparser.function_name(node)
-    hip_name_ = _environment.environment_function_hip_name(cuda_name, env)
+    hip_node = _environment.environment_function_hip_node(cuda_name, env)
+    hip_name_ = _pycparser.function_name(hip_node)
     return hip_name_

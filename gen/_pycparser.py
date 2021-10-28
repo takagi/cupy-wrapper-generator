@@ -93,11 +93,11 @@ def type_base_type(node):
 deref = type_base_type
 
 
-def type_base_type2(node):
+def type_root_type(node):
     if is_raw_type_decl_node(node):
         return node
     else:
-        return type_base_type2(deref(node))
+        return type_root_type(deref(node))
 
 
 # Opaque type declarations

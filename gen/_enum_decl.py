@@ -19,5 +19,5 @@ def cuda_type(node):
 
 def hip_type(node, env):
     cuda_name = _pycparser.enum_name(node)
-    hip_name = _environment.environment_enum_hip_name(cuda_name, env)
-    return hip_name
+    hip_node = _environment.environment_enum_hip_node(cuda_name, env)
+    return _pycparser.enum_name(hip_node)
