@@ -31,8 +31,8 @@ def _emit_cython_pyx(env, root_path, assets_path):
     os.makedirs(out_path, exist_ok=True)
     out_path = os.path.join(out_path, 'cublas.pyx')
     with open(out_path, 'w') as f:
-        code = template.format(external_decls=external_decls,
-                               wrapper_defs=wrapper_defs)
+        code = string.Template(template).substitute(
+            external_decls=external_decls, wrapper_defs=wrapper_defs)
         f.write(code)
 
 
@@ -70,10 +70,9 @@ def _emit_cython_pxd(env, root_path, assets_path):
     os.makedirs(out_path, exist_ok=True)
     out_path = os.path.join(out_path, 'cublas.pxd')
     with open(out_path, 'w') as f:
-        code = template.format(opaque_decls=opaque_decls,
-                               enum_decls=enum_decls,
-                               enum_values=enum_values,
-                               func_decls=func_decls)
+        code = string.Template(template).substitute(
+            opaque_decls=opaque_decls, enum_decls=enum_decls,
+            enum_values=enum_values, func_decls=func_decls)
         f.write(code)
 
 
@@ -122,7 +121,7 @@ def _emit_compat_header(env, root_path, assets_path):
     os.makedirs(out_path, exist_ok=True)
     out_path = os.path.join(out_path, 'cupy_cublas.h')
     with open(out_path, 'w') as f:
-        code = template.format(compat=compat)
+        code = string.Template(template).substitute(compat=compat)
         f.write(code)
 
 
@@ -156,9 +155,9 @@ def _emit_stub_header(env, root_path, assets_path):
     os.makedirs(out_path, exist_ok=True)
     out_path = os.path.join(out_path, 'cupy_cublas.h')
     with open(out_path, 'w') as f:
-        code = template.format(opaque_stubs=opaque_stubs,
-                               enum_stubs=enum_stubs,
-                               func_stubs=func_stubs)
+        code = string.Template(template).substitute(
+            opaque_stubs=opaque_stubs, enum_stubs=enum_stubs,
+            func_stubs=func_stubs)
         f.write(code)
 
 
@@ -192,9 +191,8 @@ def _emit_hip_header(env, root_path, assets_path):
     os.makedirs(out_path, exist_ok=True)
     out_path = os.path.join(out_path, 'cupy_hipblas.h')
     with open(out_path, 'w') as f:
-        code = string.Template(template).substitute(opaque_map=opaque_map,
-                                                    enum_map=enum_map,
-                                                    func_map=func_map)
+        code = string.Template(template).substitute(
+            opaque_map=opaque_map, enum_map=enum_map, func_map=func_map)
         f.write(code)
 
 

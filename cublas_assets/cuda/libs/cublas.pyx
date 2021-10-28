@@ -24,7 +24,7 @@ cdef extern from *:
 
 
 cdef extern from '../../cupy_blas.h' nogil:
-{external_decls}
+$external_decls
 
     # Define by hand for backward compatibility
     Status cublasGemmEx(Handle handle, Operation transa, Operation transb, int m, int n, int k, const void* alpha, const void* A, DataType Atype, int lda, const void* B, DataType Btype, int ldb, const void* beta, void* C, DataType Ctype, int ldc, DataType computeType, GemmAlgo algo)
@@ -39,7 +39,7 @@ cdef extern from '../../cupy_blas.h' nogil:
 # Error handling
 ###############################################################################
 
-cdef dict STATUS = {{
+cdef dict STATUS = {
     0: 'CUBLAS_STATUS_SUCCESS',
     1: 'CUBLAS_STATUS_NOT_INITIALIZED',
     3: 'CUBLAS_STATUS_ALLOC_FAILED',
@@ -50,10 +50,10 @@ cdef dict STATUS = {{
     14: 'CUBLAS_STATUS_INTERNAL_ERROR',
     15: 'CUBLAS_STATUS_NOT_SUPPORTED',
     16: 'CUBLAS_STATUS_LICENSE_ERROR',
-}}
+}
 
 
-cdef dict HIP_STATUS = {{
+cdef dict HIP_STATUS = {
     0: 'HIPBLAS_STATUS_SUCCESS',
     1: 'HIPBLAS_STATUS_NOT_INITIALIZED',
     2: 'HIPBLAS_STATUS_ALLOC_FAILED',
@@ -64,7 +64,7 @@ cdef dict HIP_STATUS = {{
     7: 'HIPBLAS_STATUS_NOT_SUPPORTED',
     8: 'HIPBLAS_STATUS_ARCH_MISMATCH',
     9: 'HIPBLAS_STATUS_HANDLE_IS_NULLPTR',
-}}
+}
 
 
 class CUBLASError(RuntimeError):
@@ -92,7 +92,7 @@ cpdef inline check_status(int status):
 # Wrapper functions
 ###############################################################################
 
-{wrapper_defs}
+$wrapper_defs
 
 
 # Define by hand for backward compatibility

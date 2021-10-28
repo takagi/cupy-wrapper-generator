@@ -6,30 +6,30 @@
 
 #include "cupy_cuda_common.h"
 
-extern "C" {{
+extern "C" {
 
-{opaque_stubs}
+$opaque_stubs
 
-{enum_stubs}
+$enum_stubs
 
-{func_stubs}
+$func_stubs
 
-cublasStatus_t cublasGemmEx(...) {{
+cublasStatus_t cublasGemmEx(...) {
     return CUBLAS_STATUS_SUCCESS;
-}}
+}
 
-cublasStatus_t cublasGemmBatchedEx(...) {{
+cublasStatus_t cublasGemmBatchedEx(...) {
     return CUBLAS_STATUS_SUCCESS;
-}}
+}
 
-cublasStatus_t cublasGemmStridedBatchedEx(...) {{
+cublasStatus_t cublasGemmStridedBatchedEx(...) {
     return CUBLAS_STATUS_SUCCESS;
-}}
+}
 
 #define cublasGemmEx_v11 cublasGemmEx
 #define cublasGemmBatchedEx_v11 cublasGemmBatchedEx
 #define cublasGemmStridedBatchedEx_v11 cublasGemmStridedBatchedEx
 
-}} // extern "C"
+} // extern "C"
 
 #endif // #ifndef INCLUDE_GUARD_STUB_CUPY_CUBLAS_H

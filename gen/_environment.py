@@ -147,13 +147,6 @@ def environment_function_hip_spec(name, env):
         return False, True, None, None
 
 
-# def environment_function_hip_name(name, env):
-#     func_hip = _environment_function(name, env).get('hip')
-#     if func_hip is None:
-#         raise ValueError('HIP counterpart not found')
-#     return func_hip['name']
-
-
 # Enums
 
 def environment_enums(env):
@@ -199,6 +192,16 @@ def environment_status_enum_node(env):
     raise ValueError('Status enum not found')
 
 
+def environment_status_enum_name(env):
+    node = environment_status_enum_node(env)
+    return _pycparser.enum_name(node)
+
+
+def environment_status_enum_success(env):
+    node = environment_status_enum_node(env)
+    return _pycparser.status_enum_success(node)
+
+
 def environment_enum_hip_node(name, env):
     enum_hip = _environment_enum(name, env).get('hip')
     if enum_hip is None:
@@ -215,13 +218,6 @@ def environment_enum_hip_spec(name, env):
     hip_name = _pycparser.enum_name(hip_node)
     is_transparent = hip_name in _hip.HIP_TRANSPARENT_ENUMS
     return True, is_transparent, None, None
-
-
-# def environment_enum_hip_name(name, env):
-#     enum_hip = _environment_enum(name, env).get('hip')
-#     if enum_hip is None:
-#         raise ValueError('HIP counterpart not found')
-#     return enum_hip['name']
 
 
 def environment_status_enum_hip_not_supported(env):
@@ -279,10 +275,3 @@ def environment_opaque_type_hip_spec(name, env):
         return False, None, None
     # ...
     return True, None, None
-
-
-# def environment_opaque_type_hip_name(name, env):
-#     opaque_hip = _environment_opaque_type(name, env).get('hip')
-#     if opaque_hip is None:
-#         raise ValueError('HIP counterpart not found')
-#     return opaque_hip['name']

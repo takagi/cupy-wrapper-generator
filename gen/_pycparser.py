@@ -21,7 +21,7 @@ def function_name(node):
 def function_arg_nodes(node):
     assert is_func_decl_node(node)
     params = node.type.args.params
-    # 'void' parameter
+    # single 'void' parameter
     if len(params) == 1 and _is_void_type_decl_node(params[0].type):
         return []
     return params
@@ -41,7 +41,9 @@ def _is_argument_node(node):
 
 def argument_name(node):
     assert _is_argument_node(node)
-    return node.name
+    name = node.name
+    assert name is not None
+    return name
 
 
 def argument_type_node(node):

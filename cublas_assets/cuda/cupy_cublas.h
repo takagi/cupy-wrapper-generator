@@ -6,7 +6,7 @@
 #include <cuda.h>
 #include <cublas_v2.h>
 
-{compat}
+$compat
 
 #if CUDA_VERSION >= 11000
 
@@ -16,17 +16,17 @@
 
 #else
 
-cublasStatus_t cublasGemmEx_v11(...) {{
+cublasStatus_t cublasGemmEx_v11(...) {
     return CUBLAS_STATUS_NOT_SUPPORTED;
-}}
+}
 
-cublasStatus_t cublasGemmBatchedEx_v11(...) {{
+cublasStatus_t cublasGemmBatchedEx_v11(...) {
     return CUBLAS_STATUS_NOT_SUPPORTED;
-}}
+}
 
-cublasStatus_t cublasGemmStridedBatchedEx_v11(...) {{
+cublasStatus_t cublasGemmStridedBatchedEx_v11(...) {
     return CUBLAS_STATUS_NOT_SUPPORTED;
-}}
+}
 
 #endif // if CUDA_VERSION >= 11000
 

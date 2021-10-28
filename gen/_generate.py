@@ -16,8 +16,6 @@ def generate_external_declaration(name, env):
         arg_name = _pycparser.argument_name(arg_node)
         arg_type_node = _pycparser.argument_type_node(arg_node)
         arg_type, is_array = _type_decl.cupy_type(arg_type_node, env)
-        if arg_name is None:
-            return arg_type  # when appears? solo void?
         if is_array:
             arg_name += '[]'
         return f'{arg_type} {arg_name}'
@@ -40,8 +38,6 @@ def generate_wrapper_declaration(name, env):
         arg_name = _pycparser.argument_name(arg_node)
         arg_type_node = _pycparser.argument_type_node(arg_node)
         arg_type = _type_decl.erased_type(arg_type_node, env)
-        if arg_name is None:
-            return arg_type  # when apperas? solo void?
         return f'{arg_type} {arg_name}'
     func_node = _environment.environment_function_node(name, env)
     arg_nodes = _pycparser.function_arg_nodes(func_node)
@@ -232,11 +228,9 @@ def generate_function_stub(name, env):
     ret_type, is_array = _type_decl.cuda_type(ret_type_node)
     assert not is_array
 
-    status_enum_node = _environment.environment_status_enum_node(env)
-    status_enum_type = _pycparser.enum_name(status_enum_node)
-
-    if ret_type == status_enum_type:
-        ret_value, _ = _pycparser.status_enum_success(status_enum_node)
+    status_enum_name = _environment.environment_status_enum_name(env)
+    if ret_type == status_enum_name:
+        ret_value, _ = _environment.environment_status_enum_success(env)
     elif ret_type == 'size_t':
         ret_value = 0
     else:
