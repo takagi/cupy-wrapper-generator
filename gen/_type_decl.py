@@ -19,6 +19,10 @@ _special_types = {
         'cupy_type': 'Stream',
         'erased_type': 'size_t',
     },
+    'cusparseStatus_t': {
+        'cupy_type': 'Status',
+        'erased_type': 'size_t',
+    },
 }
 
 

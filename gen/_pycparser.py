@@ -104,7 +104,7 @@ def type_root_type(node):
 
 # Opaque type declarations
 
-def is_opaque_type_decl_node(node):
+def _is_opaque_pointer_decl_node(node):
     def pred(node):
         if isinstance(node, c_ast.Struct):
             return True
@@ -115,6 +115,21 @@ def is_opaque_type_decl_node(node):
             isinstance(node.type, c_ast.PtrDecl) and
             isinstance(node.type.type, c_ast.TypeDecl) and
             pred(node.type.type.type))
+
+
+def _is_opaque_struct_decl_node(node):
+    return (isinstance(node, c_ast.Typedef) and
+            isinstance(node.type, c_ast.TypeDecl) and
+            isinstance(node.type.type, c_ast.Struct) and
+            isinstance(node.type.type.decls, list) and
+            len(node.type.type.decls) == 1 and
+            isinstance(node.type.type.decls[0], c_ast.Decl) and
+            isinstance(node.type.type.decls[0].type, c_ast.ArrayDecl))
+
+
+def is_opaque_type_decl_node(node):
+    return (_is_opaque_pointer_decl_node(node) or
+            _is_opaque_struct_decl_node(node))
 
 
 def opaque_type_name(node):
