@@ -29,10 +29,7 @@ def strip_suffix(name):
 
 
 def emit(out_path, template_path, **kwargs):
-    # Read the template file
     template = gen.read_template(template_path)
-
-    # Write to the output path
     os.makedirs(os.path.dirname(out_path), exist_ok=True)
     with open(out_path, 'w') as f:
         code = string.Template(template).substitute(**kwargs)
