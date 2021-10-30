@@ -14,7 +14,7 @@ def cupy_name(node, env):
 
 
 def cuda_name(node):
-    return _pycparser.function_name(node)
+    return util.strip_suffix(_pycparser.function_name(node))
 
 
 def hip_name(node, env):

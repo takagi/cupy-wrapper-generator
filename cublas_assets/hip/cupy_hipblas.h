@@ -67,7 +67,7 @@ static hipblasDatatype_t convert_hipblasDatatype_t(cudaDataType_t type) {
 
 $func_map
 
-cublasStatus_t cublasGetVersion_v2(cublasHandle_t handle, int *version) {
+cublasStatus_t cublasGetVersion(cublasHandle_t handle, int *version) {
     // We use the rocBLAS version here because 1. it is the underlying workhorse,
     // and 2. we might get rid of the hipBLAS layer at some point (see TODO above).
     // ex: the rocBLAS version string is 2.22.0.2367-b2cceba in ROCm 3.5.0
