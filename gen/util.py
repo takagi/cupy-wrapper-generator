@@ -1,5 +1,9 @@
 import math
+import os.path
 import re
+import string
+
+import gen
 
 
 def indent(string):
@@ -22,6 +26,17 @@ _strip_suffix_pattern = re.compile(r'_v[0-9]+$')
 
 def strip_suffix(name):
     return _strip_suffix_pattern.sub('', name)
+
+
+def emit(out_path, template_path, **kwargs):
+    # Read the template file
+    template = gen.read_template(template_path)
+
+    # Write to the output path
+    os.makedirs(os.path.dirname(out_path), exist_ok=True)
+    with open(out_path, 'w') as f:
+        code = string.Template(template).substitute(**kwargs)
+        f.write(code)
 
 
 def _cuda_version(version):

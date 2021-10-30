@@ -1,13 +1,12 @@
 import os
 import os.path
 import sys
-import string
 
 import gen
 import gen.util
 
 
-def _emit_cython_pyx(env, root_path, assets_path):
+def _emit_cython_pyx(env, assets_dir, out_dir):
     print('Generating cuda/libs/cublas.pyx...')
 
     # Generate external declarations
@@ -22,21 +21,15 @@ def _emit_cython_pyx(env, root_path, assets_path):
         wrapper_defs.append(gen.generate_wrapper_definition(name, env))
     wrapper_defs = '\n\n\n'.join(wrapper_defs)
 
-    # Read the template file
-    template_path = os.path.join(assets_path, 'cuda', 'libs', 'cublas.pyx')
-    template = gen.read_template(template_path)
-
-    # Write the .pyx file
-    out_path = os.path.join(root_path, 'out', 'cuda', 'libs')
-    os.makedirs(out_path, exist_ok=True)
-    out_path = os.path.join(out_path, 'cublas.pyx')
-    with open(out_path, 'w') as f:
-        code = string.Template(template).substitute(
-            external_decls=external_decls, wrapper_defs=wrapper_defs)
-        f.write(code)
+    # Emit the outcome
+    template_path = os.path.join(assets_dir, 'cuda', 'libs', 'cublas.pyx')
+    out_path = os.path.join(out_dir, 'cuda', 'libs', 'cublas.pyx')
+    gen.util.emit(out_path, template_path,
+                  external_decls=external_decls,
+                  wrapper_defs=wrapper_defs)
 
 
-def _emit_cython_pxd(env, root_path, assets_path):
+def _emit_cython_pxd(env, assets_dir, out_dir):
     print('Generating cuda/libs/cublas.pxd...')
 
     # Generate opaque type declarations
@@ -61,22 +54,17 @@ def _emit_cython_pxd(env, root_path, assets_path):
         func_decls.append(gen.generate_wrapper_declaration(name, env))
     func_decls = '\n'.join(func_decls)
 
-    # Read the template file
-    template_path = os.path.join(assets_path, 'cuda', 'libs', 'cublas.pxd')
-    template = gen.read_template(template_path)
-
-    # Write the .pxd file
-    out_path = os.path.join(root_path, 'out', 'cuda', 'libs')
-    os.makedirs(out_path, exist_ok=True)
-    out_path = os.path.join(out_path, 'cublas.pxd')
-    with open(out_path, 'w') as f:
-        code = string.Template(template).substitute(
-            opaque_decls=opaque_decls, enum_decls=enum_decls,
-            enum_values=enum_values, func_decls=func_decls)
-        f.write(code)
+    # Emit the outcome
+    template_path = os.path.join(assets_dir, 'cuda', 'libs', 'cublas.pxd')
+    out_path = os.path.join(out_dir, 'cuda', 'libs', 'cublas.pxd')
+    gen.util.emit(out_path, template_path,
+                  opaque_decls=opaque_decls,
+                  enum_decls=enum_decls,
+                  enum_values=enum_values,
+                  func_decls=func_decls)
 
 
-def _emit_compat_header(env, root_path, assets_path):
+def _emit_compat_header(env, assets_dir, out_dir):
     print('Generating cuda/cupy_cublas.h...')
 
     # Generate compat stubs
@@ -112,20 +100,13 @@ def _emit_compat_header(env, root_path, assets_path):
             compat.append(gen.util.compat_section_footer(new, 'removed'))
     compat = '\n\n'.join(compat)
 
-    # Read the template file
-    template_path = os.path.join(assets_path, 'cuda', 'cupy_cublas.h')
-    template = gen.read_template(template_path)
-
-    # Write the header file
-    out_path = os.path.join(root_path, 'out', 'cuda')
-    os.makedirs(out_path, exist_ok=True)
-    out_path = os.path.join(out_path, 'cupy_cublas.h')
-    with open(out_path, 'w') as f:
-        code = string.Template(template).substitute(compat=compat)
-        f.write(code)
+    # Emit the outcome
+    template_path = os.path.join(assets_dir, 'cuda', 'cupy_cublas.h')
+    out_path = os.path.join(out_dir, 'cuda', 'cupy_cublas.h')
+    gen.util.emit(out_path, template_path, compat=compat)
 
 
-def _emit_stub_header(env, root_path, assets_path):
+def _emit_stub_header(env, assets_dir, out_dir):
     print('Generating stub/cupy_cublas.h...')
 
     # Generate opaque type stubs
@@ -146,22 +127,16 @@ def _emit_stub_header(env, root_path, assets_path):
         func_stubs.append(gen.generate_function_stub(name, env))
     func_stubs = '\n\n'.join(func_stubs)
 
-    # Read the template file
-    template_path = os.path.join(assets_path, 'stub', 'cupy_cublas.h')
-    template = gen.read_template(template_path)
-
-    # Write the header file
-    out_path = os.path.join(root_path, 'out', 'stub')
-    os.makedirs(out_path, exist_ok=True)
-    out_path = os.path.join(out_path, 'cupy_cublas.h')
-    with open(out_path, 'w') as f:
-        code = string.Template(template).substitute(
-            opaque_stubs=opaque_stubs, enum_stubs=enum_stubs,
-            func_stubs=func_stubs)
-        f.write(code)
+    # Emit the outcome
+    template_path = os.path.join(assets_dir, 'stub', 'cupy_cublas.h')
+    out_path = os.path.join(out_dir, 'stub', 'cupy_cublas.h')
+    gen.util.emit(out_path, template_path,
+                  opaque_stubs=opaque_stubs,
+                  enum_stubs=enum_stubs,
+                  func_stubs=func_stubs)
 
 
-def _emit_hip_header(env, root_path, assets_path):
+def _emit_hip_header(env, assets_dir, out_dir):
     print('Generating hip/cupy_hipblas.h...')
 
     # Generate opaque type mapping
@@ -182,26 +157,22 @@ def _emit_hip_header(env, root_path, assets_path):
         func_map.append(gen.generate_function_hip(name, env))
     func_map = '\n\n'.join(gen.util.compact(func_map))
 
-    # Read the template file
-    template_path = os.path.join(assets_path, 'hip', 'cupy_hipblas.h')
-    template = gen.read_template(template_path)
-
-    # Write the header file
-    out_path = os.path.join(root_path, 'out', 'hip')
-    os.makedirs(out_path, exist_ok=True)
-    out_path = os.path.join(out_path, 'cupy_hipblas.h')
-    with open(out_path, 'w') as f:
-        code = string.Template(template).substitute(
-            opaque_map=opaque_map, enum_map=enum_map, func_map=func_map)
-        f.write(code)
+    # Emit the outcome
+    template_path = os.path.join(assets_dir, 'hip', 'cupy_hipblas.h')
+    out_path = os.path.join(out_dir, 'hip', 'cupy_hipblas.h')
+    gen.util.emit(out_path, template_path,
+                  opaque_map=opaque_map,
+                  enum_map=enum_map,
+                  func_map=func_map)
 
 
 def main(args):
-    root_path = os.path.dirname(__file__)
-    assets_path = os.path.join(root_path, 'cublas_assets')
+    root_dir = os.path.dirname(__file__)
+    assets_dir = os.path.join(root_dir, 'cublas_assets')
+    out_dir = os.path.join(root_dir, 'out')
 
     # Read the configuration file
-    config_path = os.path.join(assets_path, 'config.py')
+    config_path = os.path.join(assets_dir, 'config.py')
     config = gen.read_config(config_path)
 
     # Read header files of each CUDA version
@@ -213,11 +184,11 @@ def main(args):
     env = gen.analyze_headers(cuda_nodes, hip_nodes, config)
 
     # Emit output files
-    _emit_cython_pyx(env, root_path, assets_path)     # cuda/libs/cublas.pyx
-    _emit_cython_pxd(env, root_path, assets_path)     # cuda/libs/cublas.pxd
-    _emit_compat_header(env, root_path, assets_path)  # cuda/cupy_cublas.h
-    _emit_stub_header(env, root_path, assets_path)    # stub/cupy_cublas.h
-    _emit_hip_header(env, root_path, assets_path)     # hip/cupy_hipblas.h
+    _emit_cython_pyx(env, assets_dir, out_dir)     # cuda/libs/cublas.pyx
+    _emit_cython_pxd(env, assets_dir, out_dir)     # cuda/libs/cublas.pxd
+    _emit_compat_header(env, assets_dir, out_dir)  # cuda/cupy_cublas.h
+    _emit_stub_header(env, assets_dir, out_dir)    # stub/cupy_cublas.h
+    _emit_hip_header(env, assets_dir, out_dir)     # hip/cupy_hipblas.h
     print('Done.')
 
 
