@@ -4,7 +4,7 @@ from gen import _pycparser
 
 def cupy_type(node, env):
     name = _pycparser.opaque_type_name(node)
-    pattern = _environment.environment_type_pattern(env)
+    pattern = _environment.type_pattern(env)
     return pattern.fullmatch(name)[1]
 
 
@@ -19,5 +19,5 @@ def cuda_type(node):
 
 def hip_type(node, env):
     cuda_name = _pycparser.opaque_type_name(node)
-    hip_node = _environment.environment_opaque_type_hip_node(cuda_name, env)
+    hip_node = _environment.opaque_type_hip_node(cuda_name, env)
     return _pycparser.opaque_type_name(hip_node)

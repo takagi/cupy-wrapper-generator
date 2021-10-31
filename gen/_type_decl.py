@@ -50,14 +50,14 @@ def cupy_type(node, env):
         if cupy_name is not None:
             return cupy_name
         # Opaque types
-        if _environment.environment_is_opaque_type(name, env):
-            pattern = _environment.environment_type_pattern(env)
+        if _environment.is_opaque_type(name, env):
+            pattern = _environment.type_pattern(env)
             match = pattern.fullmatch(name)
             if match is not None:
                 return match[1]
         # Enumerators
-        if _environment.environment_is_enum(name, env):
-            pattern = _environment.environment_type_pattern(env)
+        if _environment.is_enum(name, env):
+            pattern = _environment.type_pattern(env)
             match = pattern.fullmatch(name)
             if match is not None:
                 return match[1]
@@ -91,10 +91,10 @@ def erased_type(node, env):
         if erased_name is not None:
             return erased_name
         # Opaque types
-        if _environment.environment_is_opaque_type(name, env):
+        if _environment.is_opaque_type(name, env):
             return 'intptr_t'
         # Enumerators
-        if _environment.environment_is_enum(name, env):
+        if _environment.is_enum(name, env):
             return 'int'
         # Otherwise (e.g. int)
         return name
@@ -202,12 +202,12 @@ def hip_mapping(cuda_node, hip_node, env):
         if cuda_name == 'cuDoubleComplex':
             raise NotImplementedError
         # Opaque types
-        if _environment.environment_is_opaque_type(cuda_name, env):
+        if _environment.is_opaque_type(cuda_name, env):
             return 'transparent', None
         # Enumerators
-        if _environment.environment_is_enum(cuda_name, env):
+        if _environment.is_enum(cuda_name, env):
             _, is_transparent, _, _ = (
-                _environment.environment_enum_hip_spec(cuda_name, env))
+                _environment.enum_hip_spec(cuda_name, env))
             assert is_transparent is not None
             if is_transparent:
                 return 'transparent', None
@@ -238,12 +238,12 @@ def hip_mapping(cuda_node, hip_node, env):
                 arg = (const_cast_name, hip_name)
                 return 'const-cast-reinterpret-cast', arg
         # Opaque types
-        if _environment.environment_is_opaque_type(root_name, env):
+        if _environment.is_opaque_type(root_name, env):
             return 'transparent', None
         # Enumerators
-        if _environment.environment_is_enum(root_name, env):
+        if _environment.is_enum(root_name, env):
             _, is_transparent, _, _ = (
-                _environment.environment_enum_hip_spec(root_name, env))
+                _environment.enum_hip_spec(root_name, env))
             assert is_transparent is not None
             if is_transparent:
                 return 'transparent', None
@@ -280,10 +280,10 @@ def hip_mapping(cuda_node, hip_node, env):
                 arg = (const_cast_name + '*', hip_name + '*')
                 return 'const-cast-reinterpret-cast', arg
         # Opaque types
-        if _environment.environment_is_opaque_type(root_name, env):
+        if _environment.is_opaque_type(root_name, env):
             assert False
         # Enumerators
-        if _environment.environment_is_enum(root_name, env):
+        if _environment.is_enum(root_name, env):
             assert False
         # Otherwise (e.g. int)
         hip_name, const_cast_name, is_array = (

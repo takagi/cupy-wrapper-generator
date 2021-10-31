@@ -19,7 +19,7 @@ def generate_external_declaration(name, env):
         if is_array:
             arg_name += '[]'
         return f'{arg_type} {arg_name}'
-    func_node = _environment.environment_function_node(name, env)
+    func_node = _environment.function_node(name, env)
     ret_type_node = _pycparser.function_ret_type_node(func_node)
     arg_nodes = _pycparser.function_arg_nodes(func_node)
     ret_type, is_array = _type_decl.cupy_type(ret_type_node, env)
@@ -39,17 +39,16 @@ def generate_wrapper_declaration(name, env):
         arg_type_node = _pycparser.argument_type_node(arg_node)
         arg_type = _type_decl.erased_type(arg_type_node, env)
         return f'{arg_type} {arg_name}'
-    func_node = _environment.environment_function_node(name, env)
+    func_node = _environment.function_node(name, env)
     arg_nodes = _pycparser.function_arg_nodes(func_node)
-    use_stream, fashion, _ = (
-        _environment.environment_function_stream_spec(name, env))
+    use_stream, fashion, _ = _environment.function_stream_spec(name, env)
     if use_stream and fashion == 'pass':
         # Remove the stream argument if the function takes it for async work
         stream_nodes, arg_nodes = gen.util.partition(
             lambda n: _is_stream_arg_node(n), arg_nodes)
         if len(stream_nodes) == 0:
             raise ValueError('Stream argument not found')
-    ret_spec = _environment.environment_function_return_spec(name, env)
+    ret_spec = _environment.function_return_spec(name, env)
     if _return_spec.is_none(ret_spec):
         cupy_name = _func_decl.cupy_name(func_node, env)
         args = [argaux(arg_node, env) for arg_node in arg_nodes]
@@ -71,7 +70,7 @@ def generate_wrapper_declaration(name, env):
         ret_type = _type_decl.erased_type(ret_type_node, env)
         cupy_name = _func_decl.cupy_name(func_node, env)
         args = [argaux(arg_node, env) for arg_node in arg_nodes1]
-        excpt = _environment.environment_function_except(name, env)
+        excpt = _environment.function_except(name, env)
         return f'cpdef {ret_type} {cupy_name}({", ".join(args)}) {excpt}'
     elif _return_spec.is_multi(ret_spec):
         raise NotImplementedError()
@@ -139,11 +138,11 @@ def generate_wrapper_definition(name, env):
     def_ = generate_wrapper_declaration(name, env) + ':'
     code.append(def_)
 
-    func_node = _environment.environment_function_node(name, env)
+    func_node = _environment.function_node(name, env)
     arg_nodes = _pycparser.function_arg_nodes(func_node)
-    ret_spec = _environment.environment_function_return_spec(name, env)
+    ret_spec = _environment.function_return_spec(name, env)
     use_stream, fashion, setter_name = (
-        _environment.environment_function_stream_spec(name, env))
+        _environment.function_stream_spec(name, env))
     if _return_spec.is_none(ret_spec):
         if use_stream:
             _generate_stream_code(code, fashion, setter_name, arg_nodes)
@@ -194,7 +193,7 @@ def generate_wrapper_definition(name, env):
 
 
 def generate_opaque_type_declaration(name, env):
-    opaque_node = _environment.environment_opaque_type_node(name, env)
+    opaque_node = _environment.opaque_type_node(name, env)
     cupy_type = _opaque_decl.cupy_type(opaque_node, env)
     erased_type = _opaque_decl.erased_type(opaque_node)
     cuda_type = _opaque_decl.cuda_type(opaque_node)
@@ -202,7 +201,7 @@ def generate_opaque_type_declaration(name, env):
 
 
 def generate_enum_declaration(name, env):
-    enum_node = _environment.environment_enum_node(name, env)
+    enum_node = _environment.enum_node(name, env)
 
     cupy_type = _enum_decl.cupy_type(enum_node, env)
     erased_type = _enum_decl.erased_type(enum_node)
@@ -221,15 +220,15 @@ def generate_enum_declaration(name, env):
 
 
 def generate_function_stub(name, env):
-    func_node = _environment.environment_function_node(name, env)
+    func_node = _environment.function_node(name, env)
 
     ret_type_node = _pycparser.function_ret_type_node(func_node)
     ret_type, is_array = _type_decl.cuda_type(ret_type_node)
     assert not is_array
 
-    status_enum_name = _environment.environment_status_enum_name(env)
+    status_enum_name = _environment.status_enum_name(env)
     if ret_type == status_enum_name:
-        ret_value, _ = _environment.environment_status_enum_success(env)
+        ret_value, _ = _environment.status_enum_success(env)
     elif ret_type == 'size_t':
         ret_value = 0
     else:
@@ -241,13 +240,13 @@ def generate_function_stub(name, env):
 
 
 def generate_opaque_type_stub(name, env):
-    opaque_node = _environment.environment_opaque_type_node(name, env)
+    opaque_node = _environment.opaque_type_node(name, env)
     cuda_type = _opaque_decl.cuda_type(opaque_node)
     return f'typedef void* {cuda_type};'
 
 
 def generate_enum_stub(name, env):
-    enum_node = _environment.environment_enum_node(name, env)
+    enum_node = _environment.enum_node(name, env)
     if _pycparser.is_status_enum_decl_node(enum_node):
         status_type = _pycparser.enum_name(enum_node)
         success_name, success_expr = _pycparser.status_enum_success(enum_node)
@@ -270,7 +269,7 @@ def generate_function_hip(name, env):
             if is_array:
                 arg_name += '[]'
             return f'{arg_type} {arg_name}'
-        func_node = _environment.environment_function_node(name, env)
+        func_node = _environment.function_node(name, env)
         ret_type_node = _pycparser.function_ret_type_node(func_node)
         arg_nodes = _pycparser.function_arg_nodes(func_node)
         ret_type, is_array = _type_decl.cuda_type(ret_type_node)
@@ -310,8 +309,8 @@ def generate_function_hip(name, env):
             else:
                 assert False
 
-        cuda_func_node = _environment.environment_function_node(name, env)
-        hip_func_node = _environment.environment_function_hip_node(name, env)
+        cuda_func_node = _environment.function_node(name, env)
+        hip_func_node = _environment.function_hip_node(name, env)
         cuda_arg_nodes = _pycparser.function_arg_nodes(cuda_func_node)
         hip_arg_nodes = _pycparser.function_arg_nodes(hip_func_node)
         hip_name = _func_decl.hip_name(cuda_func_node, env)
@@ -321,7 +320,7 @@ def generate_function_hip(name, env):
         return f'{hip_name}({", ".join(args)})'
 
     hip_skipped, hip_yes, hip_since, hip_until = (
-        _environment.environment_function_hip_spec(name, env))
+        _environment.function_hip_spec(name, env))
 
     if hip_skipped:
         return None
@@ -331,7 +330,7 @@ def generate_function_hip(name, env):
     code.append(f'{cuda_decl} {{')
 
     hip_not_supported = (
-        _environment.environment_status_enum_hip_not_supported(env))
+        _environment.status_enum_hip_not_supported(env))
     if hip_yes:
         hip_call = aux_hip_call(name, env)
         if hip_since is None and hip_until is None:
@@ -355,9 +354,9 @@ def generate_function_hip(name, env):
 
 
 def generate_opaque_type_hip(name, env):
-    opaque_node = _environment.environment_opaque_type_node(name, env)
+    opaque_node = _environment.opaque_type_node(name, env)
     hip_yes, hip_since, hip_until = (
-        _environment.environment_opaque_type_hip_spec(name, env))
+        _environment.opaque_type_hip_spec(name, env))
     assert hip_until is None
     cuda_type = _opaque_decl.cuda_type(opaque_node)
     if hip_yes:
@@ -375,9 +374,9 @@ typedef {hip_type} {cuda_type};
 
 
 def generate_enum_hip(name, env):
-    enum_node = _environment.environment_enum_node(name, env)
+    enum_node = _environment.enum_node(name, env)
     hip_yes, hip_is_transparent, hip_since, hip_until = (
-        _environment.environment_enum_hip_spec(name, env))
+        _environment.enum_hip_spec(name, env))
     assert hip_until is None
     cuda_type = _enum_decl.cuda_type(enum_node)
     if hip_yes and hip_is_transparent:

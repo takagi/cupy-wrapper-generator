@@ -2,7 +2,6 @@ import re
 
 from gen import _environment
 from gen import _pycparser
-from gen import util
 
 
 def _collect_func_decls(headers, hip_headers, config):
@@ -204,6 +203,6 @@ def analyze_headers(headers, hip_headers, config):
     enum_decls = _collect_enum_decls(headers, hip_headers, config)
     print(f'Collected {len(enum_decls)} enum(s)')
 
-    return _environment.make_environment(
+    return _environment.make(
         versions, hip_versions, patterns, func_decls, enum_decls,
         opaque_type_decls)
