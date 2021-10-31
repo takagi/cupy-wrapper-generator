@@ -1,6 +1,5 @@
 import math
 import os.path
-import re
 import string
 
 import gen
@@ -19,13 +18,6 @@ def partition(pred, seq):
 
 def compact(seq):
     return list(filter(lambda x: x is not None, seq))
-
-
-_strip_suffix_pattern = re.compile(r'_v[0-9]+$')
-
-
-def strip_suffix(name):
-    return _strip_suffix_pattern.sub('', name)
 
 
 def emit(out_path, template_path, **kwargs):

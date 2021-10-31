@@ -4,7 +4,7 @@ from gen import util
 
 
 def cupy_name(node, env):
-    cuda_name = util.strip_suffix(_pycparser.function_name(node))
+    cuda_name = _pycparser.function_name(node, strip_suffix=True)
     cupy_name_ = _environment.environment_function_cupy_name(cuda_name, env)
     if cupy_name_ is not None:
         return cupy_name_
@@ -14,11 +14,11 @@ def cupy_name(node, env):
 
 
 def cuda_name(node):
-    return util.strip_suffix(_pycparser.function_name(node))
+    return _pycparser.function_name(node, strip_suffix=True)
 
 
 def hip_name(node, env):
-    cuda_name = util.strip_suffix(_pycparser.function_name(node))
+    cuda_name = _pycparser.function_name(node, strip_suffix=True)
     hip_node = _environment.environment_function_hip_node(cuda_name, env)
     hip_name_ = _pycparser.function_name(hip_node)
     return hip_name_

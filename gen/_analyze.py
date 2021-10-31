@@ -14,7 +14,7 @@ def _collect_func_decls(headers, hip_headers, config):
             if not _pycparser.is_func_decl_node(node):
                 continue
 
-            name = util.strip_suffix(_pycparser.function_name(node))
+            name = _pycparser.function_name(node, strip_suffix=True)
             if pattern.fullmatch(name) is None:
                 continue
             if name not in config['functions']:

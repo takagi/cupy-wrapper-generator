@@ -1,3 +1,5 @@
+import re
+
 from pycparser import c_ast
 
 
@@ -13,9 +15,15 @@ def function_ret_type_node(node):
     return node.type.type
 
 
-def function_name(node):
+_strip_suffix_pattern = re.compile(r'_v[0-9]+$')
+
+
+def function_name(node, strip_suffix=False):
     assert is_func_decl_node(node)
-    return node.name
+    if strip_suffix:
+        return _strip_suffix_pattern.sub('', node.name)
+    else:
+        return node.name
 
 
 def function_arg_nodes(node):
