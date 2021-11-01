@@ -31,7 +31,6 @@
 
         'cublasCreate': {
             'return': 'handle',
-            'except?': 0,
         },
         'cublasDestroy': {
             'return': None,
@@ -56,25 +55,21 @@
         },
         'cublasGetStream': {
             'return': 'streamId',
-            'except?': 0,
         },
         'cublasGetPointerMode': {
             'return': 'mode',
-            'except?': -1,
         },
         'cublasSetPointerMode': {
             'return': None,
         },
         'cublasGetAtomicsMode': {
             'return': 'mode',
-            'except?': -1,
         },
         'cublasSetAtomicsMode': {
             'return': None,
         },
         'cublasGetMathMode': {
             'return': 'mode',
-            'except?': -1,
             'hip': 'not-supported',
         },
         'cublasSetMathMode': {

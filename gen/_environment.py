@@ -3,6 +3,7 @@ import re
 from gen import _hip
 from gen import _pycparser
 from gen import _return_spec
+import gen.util
 
 
 # Constructor
@@ -125,7 +126,28 @@ def function_except(name, env):
         excpt = func.get('except')
         if excpt is not None:
             return f'except {excpt}'
-        assert "Either 'except?' or 'except' must be given"
+
+        # A default error return value if possible
+        out_name = _return_spec.single_return_spec(ret_spec)
+        arg_nodes = _pycparser.function_arg_nodes(func['node'])
+        out_nodes, _ = gen.util.partition(
+            lambda n: _pycparser.argument_name(n) == out_name, arg_nodes)
+        assert len(out_nodes) == 1
+        out_node = out_nodes[0]
+        out_type_node = _pycparser.argument_type_node(out_node)
+        out_base_type_node = _pycparser.type_base_type(out_type_node)
+        out_base_type_name = _pycparser.type_name(out_base_type_node)
+        if out_base_type_name == 'cudaStream_t':
+            # TODO(takgi) Isn't 'except -1' enough for cudaStream_t?
+            return f'except? 0'
+        if is_opaque_type(out_base_type_name, env):
+            return f'except? 0'
+        if is_enum(out_base_type_name, env):
+            # TODO(takagi) Sould it be 'except?' instead of 'except'? Some CUDA
+            # enums have -1 as their actual values, though.
+            return f'except? -1'
+
+        raise ValueError("Either 'except?' or 'except' must be given")
     elif _return_spec.is_multi(ret_spec):
         assert 'except' not in func and 'except?' not in func
         raise NotImplementedError()
